@@ -175,11 +175,40 @@ void moveGeneration(string moves, struct Board &board)
       else if (board.pices[white][rook] & from_mask)
       {
         cout << "piece is rook" << endl;
-        if (!is_rook_move_valid(board, moves, 1))
+        // this is the case of capturing piece
+        if (is_piece_present_in_square(board, moves[2], moves[3]))
         {
-          cout << "Please ! Enter valid rook move since rook move only in one direction " << endl;
-          return;
+          if (is_rook_move_valid(board, moves, 1))
+          {
+            if (board.ouccupancy[black] & to_mask)
+            {
+              capturePieces(to_mask, board, 1);
+              cout << "Black piece is captured " << endl;
+            }
+            else
+            {
+              cout << "Please Enter valid move since rook cannot capture its own piece." << endl;
+              return;
+            }
+          }
+          else
+          {
+            if (!is_rook_move_valid(board, moves, 1))
+            {
+              cout << "Please! Enter valid rook move. " << endl;
+              return;
+            }
+          }
         }
+        else
+        {
+          if (!is_rook_move_valid(board, moves, 1))
+          {
+            cout << "Plese! Enter valid rook move . " << endl;
+            return;
+          }
+        }
+
         board.pices[white][rook] = board.pices[white][rook] & (~from_mask);
         board.pices[white][rook] = board.pices[white][rook] | (to_mask);
       }
@@ -247,6 +276,39 @@ void moveGeneration(string moves, struct Board &board)
       else if (board.pices[black][rook] & from_mask)
       {
         cout << "piece is rook" << endl;
+        // this is the case of capturing piece
+        if (is_piece_present_in_square(board, moves[2], moves[3]))
+        {
+          if (is_rook_move_valid(board, moves, 0))
+          {
+            if (board.ouccupancy[white] & to_mask)
+            {
+              capturePieces(to_mask, board, 0);
+              cout << "Black piece is captured " << endl;
+            }
+            else
+            {
+              cout << "Please Enter valid move since rook cannot capture its own piece." << endl;
+              return;
+            }
+          }
+          else
+          {
+            if (!is_rook_move_valid(board, moves, 0))
+            {
+              cout << "Please! Enter valid rook move. " << endl;
+              return;
+            }
+          }
+        }
+        else
+        {
+          if (!is_rook_move_valid(board, moves, 0))
+          {
+            cout << "Plese! Enter valid rook move . " << endl;
+            return;
+          }
+        }
         board.pices[black][rook] = board.pices[black][rook] & (~from_mask);
         board.pices[black][rook] = board.pices[black][rook] | (to_mask);
       }
