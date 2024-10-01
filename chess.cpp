@@ -126,6 +126,7 @@ void capturePieces(Bitboard to_mask, Board &board, int flag)
 
 void moveGeneration(string moves, struct Board &board)
 {
+
   // pawn moves
   // moves[1]-48 convert ascii to decimal number
   Bitboard bit = 1;
@@ -191,6 +192,7 @@ void moveGeneration(string moves, struct Board &board)
               return;
             }
           }
+
           else
           {
             if (!is_rook_move_valid(board, moves, 1))
@@ -221,12 +223,25 @@ void moveGeneration(string moves, struct Board &board)
       else if (board.pices[white][bishop] & from_mask)
       {
         cout << "piece is bishop" << endl;
+
+        if (!is_bishop_move_valid(board, moves, 1))
+        {
+          cout << "invaid bishop move" << endl;
+          return;
+        }
+
         board.pices[white][bishop] = board.pices[white][bishop] & (~from_mask);
         board.pices[white][bishop] = board.pices[white][bishop] | (to_mask);
       }
       else if (board.pices[white][king] & from_mask)
       {
         cout << "piece is king" << endl;
+        if (!is_king_move_valid(board, moves, 1))
+        {
+           cout<<"please Enter valid king move"<<endl;
+           return;
+        }
+        
         board.pices[white][king] = board.pices[white][king] & (~from_mask);
         board.pices[white][king] = board.pices[white][king] | (to_mask);
       }
@@ -284,7 +299,7 @@ void moveGeneration(string moves, struct Board &board)
             if (board.ouccupancy[white] & to_mask)
             {
               capturePieces(to_mask, board, 0);
-              cout << "Black piece is captured " << endl;
+              cout << "white piece is captured " << endl;
             }
             else
             {

@@ -25,7 +25,10 @@ enum
 };
 
 int is_this_pawn_first_move(Board &board, char move, int flag);
-int is_pawn_move_valid(Board &board, string &moves,int flag);
-int is_rook_move_valid(Board &board, string &moves,int flag);
+int is_pawn_move_valid(Board &board, string &moves,int flag);  
+int is_rook_move_valid(Board &board, string &moves,int flag);  
+int is_bishop_move_valid(Board &board, string &moves,int flag); 
+int is_king_move_valid(Board &board, string &moves,int flag);  
+
 
 int is_piece_present_in_square(Board &board, char col, int row);
