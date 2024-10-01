@@ -217,6 +217,26 @@ void moveGeneration(string moves, struct Board &board)
       else if (board.pices[white][knight] & from_mask)
       {
         cout << "piece is knight" << endl;
+        if (!is_knight_move_valid(board, moves, 1))
+        {
+          cout << "Please Enter valid knight move" << endl;
+          return;
+        }
+        // this is the case of capturing piece
+        if (is_piece_present_in_square(board, moves[2], moves[3]))
+        {
+          if (board.ouccupancy[black] & to_mask)
+          {
+            capturePieces(to_mask, board, 1);
+            cout << "Black piece is captured " << endl;
+          }
+          else
+          {
+            cout << "Please Enter valid move since knight cannot capture its own piece." << endl;
+            return;
+          }
+        }
+
         board.pices[white][knight] = board.pices[white][knight] & (~from_mask);
         board.pices[white][knight] = board.pices[white][knight] | (to_mask);
       }
@@ -238,10 +258,24 @@ void moveGeneration(string moves, struct Board &board)
         cout << "piece is king" << endl;
         if (!is_king_move_valid(board, moves, 1))
         {
-           cout<<"please Enter valid king move"<<endl;
-           return;
+          cout << "please Enter valid king move" << endl;
+          return;
         }
-        
+        // this is the case of capturing piece
+        if (is_piece_present_in_square(board, moves[2], moves[3]))
+        {
+          if (board.ouccupancy[black] & to_mask)
+          {
+            capturePieces(to_mask, board, 1);
+            cout << "Black piece is captured " << endl;
+          }
+          else
+          {
+            cout << "Please Enter valid move since king cannot capture its own piece." << endl;
+            return;
+          }
+        }
+
         board.pices[white][king] = board.pices[white][king] & (~from_mask);
         board.pices[white][king] = board.pices[white][king] | (to_mask);
       }
@@ -330,6 +364,26 @@ void moveGeneration(string moves, struct Board &board)
       else if (board.pices[black][knight] & from_mask)
       {
         cout << "piece is knight" << endl;
+        if (!is_knight_move_valid(board, moves, 0))
+        {
+          cout << "Please Enter valid knight move" << endl;
+          return;
+        }
+        // this is the case of capturing piece
+        if (is_piece_present_in_square(board, moves[2], moves[3]))
+        {
+          if (board.ouccupancy[white] & to_mask)
+          {
+            capturePieces(to_mask, board, 0);
+            cout << "white piece is captured " << endl;
+          }
+          else
+          {
+            cout << "Please Enter valid move since knight cannot capture its own piece." << endl;
+            return;
+          }
+        }
+
         board.pices[black][knight] = board.pices[black][knight] & (~from_mask);
         board.pices[black][knight] = board.pices[black][knight] | (to_mask);
       }
@@ -342,6 +396,25 @@ void moveGeneration(string moves, struct Board &board)
       else if (board.pices[black][king] & from_mask)
       {
         cout << "piece is king" << endl;
+        if (!is_king_move_valid(board, moves, 0))
+        {
+          cout << "please Enter valid king move" << endl;
+          return;
+        }
+        // this is the case of capturing piece
+        if (is_piece_present_in_square(board, moves[2], moves[3]))
+        {
+          if (board.ouccupancy[white] & to_mask)
+          {
+            capturePieces(to_mask, board, 0);
+            cout << "white piece is captured " << endl;
+          }
+          else
+          {
+            cout << "Please Enter valid move since king cannot capture its own piece." << endl;
+            return;
+          }
+        }
         board.pices[black][king] = board.pices[black][king] & (~from_mask);
         board.pices[black][king] = board.pices[black][king] | (to_mask);
       }
