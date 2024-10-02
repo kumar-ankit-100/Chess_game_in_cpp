@@ -250,6 +250,21 @@ void moveGeneration(string moves, struct Board &board)
           return;
         }
 
+        // this is the case of capturing piece by bishop
+        if (is_piece_present_in_square(board, moves[2], moves[3]))
+        {
+          if (board.ouccupancy[black] & to_mask)
+          {
+            capturePieces(to_mask, board, 1);
+            cout << "Black piece is captured " << endl;
+          }
+          else
+          {
+            cout << "Please Enter valid move since bishop cannot capture its own piece." << endl;
+            return;
+          }
+        }
+
         board.pices[white][bishop] = board.pices[white][bishop] & (~from_mask);
         board.pices[white][bishop] = board.pices[white][bishop] | (to_mask);
       }
@@ -390,6 +405,26 @@ void moveGeneration(string moves, struct Board &board)
       else if (board.pices[black][bishop] & from_mask)
       {
         cout << "piece is bishop" << endl;
+        if (!is_bishop_move_valid(board, moves, 0))
+        {
+          cout << "invaid bishop move" << endl;
+          return;
+        }
+
+        // this is the case of capturing piece by bishop
+        if (is_piece_present_in_square(board, moves[2], moves[3]))
+        {
+          if (board.ouccupancy[white] & to_mask)
+          {
+            capturePieces(to_mask, board, 0);
+            cout << "White piece is captured " << endl;
+          }
+          else
+          {
+            cout << "Please Enter valid move since bishop cannot capture its own piece." << endl;
+            return;
+          }
+        }
         board.pices[black][bishop] = board.pices[black][bishop] & (~from_mask);
         board.pices[black][bishop] = board.pices[black][bishop] | (to_mask);
       }
