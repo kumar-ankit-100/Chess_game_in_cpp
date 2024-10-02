@@ -1,6 +1,4 @@
-#include <bits/stdc++.h>
 #include "common_header.h"
-using namespace std;
 
 int is_piece_present_in_square(Board &board, char col, int row)
 {

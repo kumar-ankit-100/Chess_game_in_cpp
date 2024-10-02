@@ -1,6 +1,4 @@
-#include <bits/stdc++.h>
 #include "common_header.h"
-using namespace std;
 
 int is_rook_move_valid(Board &board, string &moves, int flag)
 {
