@@ -124,7 +124,7 @@ void capturePieces(Bitboard to_mask, Board &board, int flag)
   board.ouccupancy[color] &= ~to_mask;
 }
 
-void moveGeneration(string moves, struct Board &board)
+int moveGeneration(string moves, struct Board &board)
 {
 
   // pawn moves
@@ -155,7 +155,7 @@ void moveGeneration(string moves, struct Board &board)
           else
           {
             cout << "Please Enter valid move since pawn cannot capture its own piece." << endl;
-            return;
+            return 0;
           }
         }
         else
@@ -164,7 +164,7 @@ void moveGeneration(string moves, struct Board &board)
           if (!is_pawn_move_valid(board, moves, 1))
           {
             cout << "Please! Enter valid pawn move. " << endl;
-            return;
+            return 0;
           }
         }
         // cout << "piece satus of present is : " << is_this_pawn_first_move(board, moves[0], 1) << endl;
@@ -189,7 +189,7 @@ void moveGeneration(string moves, struct Board &board)
             else
             {
               cout << "Please Enter valid move since rook cannot capture its own piece." << endl;
-              return;
+              return 0;
             }
           }
 
@@ -198,7 +198,7 @@ void moveGeneration(string moves, struct Board &board)
             if (!is_rook_move_valid(board, moves, 1))
             {
               cout << "Please! Enter valid rook move. " << endl;
-              return;
+              return 0;
             }
           }
         }
@@ -207,7 +207,7 @@ void moveGeneration(string moves, struct Board &board)
           if (!is_rook_move_valid(board, moves, 1))
           {
             cout << "Plese! Enter valid rook move . " << endl;
-            return;
+            return 0;
           }
         }
 
@@ -220,7 +220,7 @@ void moveGeneration(string moves, struct Board &board)
         if (!is_knight_move_valid(board, moves, 1))
         {
           cout << "Please Enter valid knight move" << endl;
-          return;
+          return 0;
         }
         // this is the case of capturing piece
         if (is_piece_present_in_square(board, moves[2], moves[3]))
@@ -233,7 +233,7 @@ void moveGeneration(string moves, struct Board &board)
           else
           {
             cout << "Please Enter valid move since knight cannot capture its own piece." << endl;
-            return;
+            return 0;
           }
         }
 
@@ -247,7 +247,7 @@ void moveGeneration(string moves, struct Board &board)
         if (!is_bishop_move_valid(board, moves, 1))
         {
           cout << "invaid bishop move" << endl;
-          return;
+          return 0;
         }
 
         // this is the case of capturing piece by bishop
@@ -261,7 +261,7 @@ void moveGeneration(string moves, struct Board &board)
           else
           {
             cout << "Please Enter valid move since bishop cannot capture its own piece." << endl;
-            return;
+            return 0;
           }
         }
 
@@ -274,7 +274,7 @@ void moveGeneration(string moves, struct Board &board)
         if (!is_king_move_valid(board, moves, 1))
         {
           cout << "please Enter valid king move" << endl;
-          return;
+          return 0;
         }
         // this is the case of capturing piece
         if (is_piece_present_in_square(board, moves[2], moves[3]))
@@ -287,7 +287,7 @@ void moveGeneration(string moves, struct Board &board)
           else
           {
             cout << "Please Enter valid move since king cannot capture its own piece." << endl;
-            return;
+            return 0;
           }
         }
 
@@ -300,7 +300,7 @@ void moveGeneration(string moves, struct Board &board)
         if (!is_queen_move_valid(board, moves, 1))
         {
           cout << "Please Enter valid queen move" << endl;
-          return;
+          return 0;
         }
         // this is the case of capturing piece
         if (is_piece_present_in_square(board, moves[2], moves[3]))
@@ -313,7 +313,7 @@ void moveGeneration(string moves, struct Board &board)
           else
           {
             cout << "Please Enter valid move since queen cannot capture its own piece." << endl;
-            return;
+            return 0;
           }
         }
         board.pices[white][queen] = board.pices[white][queen] & (~from_mask);
@@ -323,6 +323,7 @@ void moveGeneration(string moves, struct Board &board)
       board.ouccupancy[white] = board.ouccupancy[white] | (to_mask);
       board.ouccupancy[both] = board.ouccupancy[both] & (~from_mask);
       board.ouccupancy[both] = board.ouccupancy[both] | (to_mask);
+      return 1;
     }
     else
     {
@@ -340,7 +341,7 @@ void moveGeneration(string moves, struct Board &board)
           else
           {
             cout << "Please Enter valid move since pawn cannot capture its own piece." << endl;
-            return;
+            return 0;
           }
         }
         else
@@ -349,7 +350,7 @@ void moveGeneration(string moves, struct Board &board)
           if (!is_pawn_move_valid(board, moves, 0))
           {
             cout << "Please! Enter valid pawn move. " << endl;
-            return;
+            return 0;
           }
         }
 
@@ -372,7 +373,7 @@ void moveGeneration(string moves, struct Board &board)
             else
             {
               cout << "Please Enter valid move since rook cannot capture its own piece." << endl;
-              return;
+              return 0;
             }
           }
           else
@@ -380,7 +381,7 @@ void moveGeneration(string moves, struct Board &board)
             if (!is_rook_move_valid(board, moves, 0))
             {
               cout << "Please! Enter valid rook move. " << endl;
-              return;
+              return 0;
             }
           }
         }
@@ -389,7 +390,7 @@ void moveGeneration(string moves, struct Board &board)
           if (!is_rook_move_valid(board, moves, 0))
           {
             cout << "Plese! Enter valid rook move . " << endl;
-            return;
+            return 0;
           }
         }
         board.pices[black][rook] = board.pices[black][rook] & (~from_mask);
@@ -401,7 +402,7 @@ void moveGeneration(string moves, struct Board &board)
         if (!is_knight_move_valid(board, moves, 0))
         {
           cout << "Please Enter valid knight move" << endl;
-          return;
+          return 0;
         }
         // this is the case of capturing piece
         if (is_piece_present_in_square(board, moves[2], moves[3]))
@@ -414,7 +415,7 @@ void moveGeneration(string moves, struct Board &board)
           else
           {
             cout << "Please Enter valid move since knight cannot capture its own piece." << endl;
-            return;
+            return 0;
           }
         }
 
@@ -427,7 +428,7 @@ void moveGeneration(string moves, struct Board &board)
         if (!is_bishop_move_valid(board, moves, 0))
         {
           cout << "invaid bishop move" << endl;
-          return;
+          return 0;
         }
 
         // this is the case of capturing piece by bishop
@@ -441,7 +442,7 @@ void moveGeneration(string moves, struct Board &board)
           else
           {
             cout << "Please Enter valid move since bishop cannot capture its own piece." << endl;
-            return;
+            return 0;
           }
         }
         board.pices[black][bishop] = board.pices[black][bishop] & (~from_mask);
@@ -453,7 +454,7 @@ void moveGeneration(string moves, struct Board &board)
         if (!is_king_move_valid(board, moves, 0))
         {
           cout << "please Enter valid king move" << endl;
-          return;
+          return 0;
         }
         // this is the case of capturing piece
         if (is_piece_present_in_square(board, moves[2], moves[3]))
@@ -466,7 +467,7 @@ void moveGeneration(string moves, struct Board &board)
           else
           {
             cout << "Please Enter valid move since king cannot capture its own piece." << endl;
-            return;
+            return 0;
           }
         }
         board.pices[black][king] = board.pices[black][king] & (~from_mask);
@@ -478,7 +479,7 @@ void moveGeneration(string moves, struct Board &board)
         if (!is_queen_move_valid(board, moves, 0))
         {
           cout << "Please Enter valid queen move" << endl;
-          return;
+          return 0;
         }
         // this is the case of capturing piece
         if (is_piece_present_in_square(board, moves[2], moves[3]))
@@ -491,7 +492,7 @@ void moveGeneration(string moves, struct Board &board)
           else
           {
             cout << "Please Enter valid move since queen cannot capture its own piece." << endl;
-            return;
+            return 0;
           }
         }
         board.pices[black][queen] = board.pices[black][queen] & (~from_mask);
@@ -501,14 +502,34 @@ void moveGeneration(string moves, struct Board &board)
       board.ouccupancy[black] = board.ouccupancy[black] | (to_mask);
       board.ouccupancy[both] = board.ouccupancy[both] & (~from_mask);
       board.ouccupancy[both] = board.ouccupancy[both] | (to_mask);
+      return 1;
     }
   }
   else
   {
     cout << "starting piece is not present" << endl;
+    return 0;
   }
 }
-
+bool isValidMoveInput(const string &move)
+{
+  if (move.length() != 4)
+  {
+    cout << "Invalid input length. Please enter a move like 'e2e4'." << endl;
+    return false;
+  }
+  if (move[0] < 'a' || move[0] > 'h' || move[2] < 'a' || move[2] > 'h')
+  {
+    cout << "Invalid column. Columns must be between 'a' and 'h'." << endl;
+    return false;
+  }
+  if (move[1] < '1' || move[1] > '8' || move[3] < '1' || move[3] > '8')
+  {
+    cout << "Invalid row. Rows must be between '1' and '8'." << endl;
+    return false;
+  }
+  return true;
+}
 int main()
 {
 
@@ -523,16 +544,18 @@ int main()
     if (flag)
     {
       cout << "\nWhite Moves , Enter Moves name (eg. e2e4): ";
-      cin >> moves;
-      flag = 0;
     }
     else
     {
       cout << "\nBlack Moves , Enter Moves name (eg. e2e4): ";
-      cin >> moves;
-      flag = 1;
     }
-    // cout<<moves[2]<<" "<<moves[3]<<"\n";
-    moveGeneration(moves, board);
+    cin >> moves;
+    if (isValidMoveInput(moves))
+    {
+      if (moveGeneration(moves, board))
+      {
+        flag = flag ? 0 : 1;
+      }
+    }
   }
 }
