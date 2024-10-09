@@ -107,7 +107,7 @@ int is_rook_move_valid(Board &board, string &moves, int flag)
 }
 
 vector<vector<string>> get_rook_moves(Board &board, char col, int row)
-{
+{       
     vector<vector<string>> possible_moves;
     vector<string> straightMoves;
     Bitboard bit = 1;
