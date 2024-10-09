@@ -105,3 +105,105 @@ int is_rook_move_valid(Board &board, string &moves, int flag)
     }
     return 1;
 }
+
+vector<vector<string>> get_rook_moves(Board &board, char col, int row)
+{
+    vector<vector<string>> possible_moves;
+    vector<string> straightMoves;
+    Bitboard bit = 1;
+    cout << "bit is shift by " << ((row * 8) - (col - 97) - 1) << endl;
+    Bitboard from_mask = bit << ((row * 8) - (col - 97) - 1);
+    int flag = board.ouccupancy[white] & from_mask ? 1 : 0; // Check if it's a white rook
+
+    // Check rook's horizontal and vertical moves (straight lines)
+    // Horizontal (left-right)
+    for (int i = col - 1; i >= 'a'; --i) // Move left
+    {
+        if (!is_piece_present_in_square(board, i, row))
+        {
+            straightMoves.push_back(string(1, i) + to_string(row));
+        }
+        else
+        {
+            Bitboard to_mask = bit << ((row * 8) - (i - 97) - 1);
+            if (board.ouccupancy[flag ? black : white] & to_mask) // Check for opponent piece
+            {
+                straightMoves.push_back(string(1, i) + to_string(row)); // Capture opponent's piece
+            }
+            break; // Blocked by any piece
+        }
+    }
+
+    for (int i = col + 1; i <= 'h'; ++i) // Move right
+    {
+        if (!is_piece_present_in_square(board, i, row))
+        {
+            straightMoves.push_back(string(1, i) + to_string(row));
+        }
+        else
+        {
+            Bitboard to_mask = bit << ((row * 8) - (i - 97) - 1);
+            if (board.ouccupancy[flag ? black : white] & to_mask)
+            {
+                straightMoves.push_back(string(1, i) + to_string(row));
+            }
+            break;
+        }
+    }
+
+    // Vertical (up-down)
+    for (int j = row + 1; j <= 8; ++j) // Move upwards
+    {
+        if (!is_piece_present_in_square(board, col, j))
+        {
+            straightMoves.push_back(string(1, col) + to_string(j));
+        }
+        else
+        {
+            Bitboard to_mask = bit << ((j * 8) - (col - 97) - 1);
+            if (board.ouccupancy[flag ? black : white] & to_mask)
+            {
+                straightMoves.push_back(string(1, col) + to_string(j));
+            }
+            break;
+        }
+    }
+
+    for (int j = row - 1; j >= 1; --j) // Move downwards
+    {
+        if (!is_piece_present_in_square(board, col, j))
+        {
+            straightMoves.push_back(string(1, col) + to_string(j));
+        }
+        else
+        {
+            Bitboard to_mask = bit << ((j * 8) - (col - 97) - 1);
+            if (board.ouccupancy[flag ? black : white] & to_mask)
+            {
+                straightMoves.push_back(string(1, col) + to_string(j));
+            }
+            break;
+        }
+    }
+
+    // Add the straight moves to possible moves
+    possible_moves.push_back(straightMoves);
+
+    // Handle rook's capturing moves
+    vector<string> captureMoves;
+    for (const string &move : straightMoves)
+    {
+        int move_col = move[0];
+        int move_row = stoi(move.substr(1));
+
+        Bitboard to_mask = bit << ((move_row * 8) - (move_col - 97) - 1);
+        if (board.ouccupancy[flag ? black : white] & to_mask) // If it's an opponent piece
+        {
+            captureMoves.push_back(move);
+        }
+    }
+
+    possible_moves.push_back(captureMoves); // Capture moves
+
+    return possible_moves;
+}

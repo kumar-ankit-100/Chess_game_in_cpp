@@ -39,6 +39,11 @@ void capturePieces(Bitboard to_mask, Board &board, int flag);
 
 vector<string> tempfun();
 vector<vector<string>> get_pawn_moves(Board &board, char col , int row);
+vector<vector<string>> get_rook_moves(Board &board, char col, int row);
+vector<vector<string>> get_bishop_moves(Board &board, char col, int row) ;
+vector<vector<string>> get_queen_moves(Board &board, char col, int row);
+vector<vector<string>> get_knight_moves(Board &board, char col, int row);
+vector<vector<string>> get_king_moves(Board &board, char col, int row);
 // bool isValidMoveInput(const string &move);
 
 

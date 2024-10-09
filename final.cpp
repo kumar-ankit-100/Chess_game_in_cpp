@@ -32,6 +32,8 @@ std::atomic<bool> socket_valid(true);
 
 string handle_request(const string &json_request, Board &board)
 {
+    std::cout << "Raw JSON request: " << json_request << std::endl;
+
     json request = json::parse(json_request);
     json response;
 
@@ -43,8 +45,32 @@ string handle_request(const string &json_request, Board &board)
         // Extract column and row from position (e.g., 'b3' -> col = 'b', row = 3)
         char col = position[0];
         int row = position[1] - '0';
-
-        vector<vector<string>> possible_moves = get_pawn_moves(board, col, row);
+        string pieceName = request["pieceName"];
+        vector<vector<string>> possible_moves;
+        if (pieceName == "knight")
+        {
+            possible_moves = get_knight_moves(board, col, row);
+        }
+        if (pieceName == "king")
+        {
+            possible_moves = get_king_moves(board, col, row);
+        }
+        if (pieceName == "queen")
+        {
+            possible_moves = get_queen_moves(board, col, row);
+        }
+        if (pieceName == "pawn")
+        {
+            possible_moves = get_pawn_moves(board, col, row);
+        }
+        if (pieceName == "rook")
+        {
+            possible_moves = get_rook_moves(board, col, row);
+        }
+        if (pieceName == "bishop")
+        {
+            possible_moves = get_bishop_moves(board, col, row);
+        }
 
         response["possibleMoves"] = possible_moves[0];
         response["possibleCaptures"] = possible_moves[1];
@@ -123,11 +149,33 @@ string decode_websocket_frame(const char *buffer, int length)
 string encode_websocket_frame(const string &message)
 {
     string frame;
-    frame += 0x81;
-    frame += static_cast<char>(message.size());
+    frame += 0x81; // First byte: FIN bit set, opcode for text frame (0x1)
+    
+    // Payload length encoding
+    if (message.size() <= 125)
+    {
+        frame += static_cast<char>(message.size()); // No masking and length <= 125
+    }
+    else if (message.size() <= 65535)
+    {
+        frame += 126;
+        frame += static_cast<char>((message.size() >> 8) & 0xFF);
+        frame += static_cast<char>(message.size() & 0xFF);
+    }
+    else
+    {
+        frame += 127;
+        for (int i = 7; i >= 0; --i)
+        {
+            frame += static_cast<char>((message.size() >> (8 * i)) & 0xFF);
+        }
+    }
+
+    // Append the actual message
     frame += message;
     return frame;
 }
+
 
 class WebSocketSession : public std::enable_shared_from_this<WebSocketSession>
 {
@@ -196,8 +244,8 @@ private:
 
                     json parsedMessage = json::parse(message);
                     cout<<parsedMessage.dump()<<endl;
-                    
                     string response = handle_request(message,board);
+
 
 
                     std::string response_frame = encode_websocket_frame(response);
