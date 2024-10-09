@@ -511,51 +511,57 @@ int moveGeneration(string moves, struct Board &board)
     return 0;
   }
 }
-bool isValidMoveInput(const string &move)
-{
-  if (move.length() != 4)
-  {
-    cout << "Invalid input length. Please enter a move like 'e2e4'." << endl;
-    return false;
-  }
-  if (move[0] < 'a' || move[0] > 'h' || move[2] < 'a' || move[2] > 'h')
-  {
-    cout << "Invalid column. Columns must be between 'a' and 'h'." << endl;
-    return false;
-  }
-  if (move[1] < '1' || move[1] > '8' || move[3] < '1' || move[3] > '8')
-  {
-    cout << "Invalid row. Rows must be between '1' and '8'." << endl;
-    return false;
-  }
-  return true;
-}
-int main()
-{
 
-  // cout<<king;
-  Board board;
-  string moves;
-  initializeBoard(board);
-  int flag = 1;
-  while (true)
-  {
-    printBoard(board);
-    if (flag)
-    {
-      cout << "\nWhite Moves , Enter Moves name (eg. e2e4): ";
-    }
-    else
-    {
-      cout << "\nBlack Moves , Enter Moves name (eg. e2e4): ";
-    }
-    cin >> moves;
-    if (isValidMoveInput(moves))
-    {
-      if (moveGeneration(moves, board))
-      {
-        flag = flag ? 0 : 1;
-      }
-    }
-  }
+vector<string> tempfun(){
+  vector<string> moves = {"e4","e5"};
+  return moves;
 }
+
+// bool isValidMoveInput(const string &move)
+// {
+//   if (move.length() != 4)
+//   {
+//     cout << "Invalid input length. Please enter a move like 'e2e4'." << endl;
+//     return false;
+//   }
+//   if (move[0] < 'a' || move[0] > 'h' || move[2] < 'a' || move[2] > 'h')
+//   {
+//     cout << "Invalid column. Columns must be between 'a' and 'h'." << endl;
+//     return false;
+//   }
+//   if (move[1] < '1' || move[1] > '8' || move[3] < '1' || move[3] > '8')
+//   {
+//     cout << "Invalid row. Rows must be between '1' and '8'." << endl;
+//     return false;
+//   }
+//   return true;
+// }
+
+// int main()
+// {
+//   // cout<<king;
+//   Board board;
+//   string moves;
+//   initializeBoard(board);
+//   int flag = 1;
+//   while (true)
+//   {
+//     printBoard(board);
+//     if (flag)
+//     {
+//       cout << "\nWhite Moves , Enter Moves name (eg. e2e4): ";
+//     }
+//     else
+//     {
+//       cout << "\nBlack Moves , Enter Moves name (eg. e2e4): ";
+//     }
+//     cin >> moves;
+//     if (isValidMoveInput(moves))
+//     {
+//       if (moveGeneration(moves, board))
+//       {
+//         flag = flag ? 0 : 1;
+//       }
+//     }
+//   }
+// }

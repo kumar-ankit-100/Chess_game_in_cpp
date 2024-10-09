@@ -102,3 +102,79 @@ int is_pawn_move_valid(Board &board, string &moves, int flag)
 // int capture_pices_by_pawn(Board &board, string &moves)
 // {
 // }
+
+vector<vector<string>> get_pawn_moves(Board &board, char col, int row)
+{
+    vector<vector<string>> possible_moves;
+    vector<string> emptyMove;
+    Bitboard bit = 1;
+    cout << "bit is shift by " << ((row * 8) - (col - 97) - 1) << endl;
+    Bitboard from_mask = bit << ((row * 8) - (col - 97) - 1);
+    int flag = board.ouccupancy[white] & from_mask ? 1 : 0;
+    // Calculate forward move (one step forward)
+    if (flag) // white pawn
+    {
+        cout << "white pawn" << endl;
+        if (!is_piece_present_in_square(board, col, row + 1))
+        {
+            emptyMove.push_back(string(1, col) + to_string(row + 1));
+            if (row == 2 && !is_piece_present_in_square(board, col, row + 2))
+            {
+                emptyMove.push_back(string(1, col) + to_string(row + 2));
+            }
+        }
+    }
+    else // black pawn
+    {
+        cout << "black pawn" << endl;
+        if (!is_piece_present_in_square(board, col, row - 1))
+        {
+            emptyMove.push_back(string(1, col) + to_string(row - 1));
+            if (row == 7 && !is_piece_present_in_square(board, col, row - 2))
+            {
+                emptyMove.push_back(string(1, col) + to_string(row - 2));
+            }
+        }
+    }
+    possible_moves.push_back(emptyMove);
+    vector<string> captureMove;
+
+    // Calculate diagonal captures
+    int opponentColor = flag ? black : white;
+    if (flag) // white pawn captures
+    {
+        cout << "white pawn and capture piece available" << endl;
+
+        if (col > 'a' && is_piece_present_in_square(board, col - 1, row + 1))
+        {
+            Bitboard to_mask = bit << (((row + 1) * 8) - ((col - 1) - 97) - 1);
+            if (board.ouccupancy[opponentColor] & to_mask)
+                captureMove.push_back(string(1, col - 1) + to_string(row + 1));
+        }
+        if (col < 'h' && is_piece_present_in_square(board, col + 1, row + 1))
+        {
+            Bitboard to_mask = bit << (((row + 1) * 8) - ((col + 1) - 97) - 1);
+            if (board.ouccupancy[opponentColor] & to_mask)
+                captureMove.push_back(string(1, col + 1) + to_string(row + 1));
+        }
+    }
+    else // black pawn captures
+    {
+
+        cout << "black pawn and capture piece available" << endl;
+        if (col > 'a' && is_piece_present_in_square(board, col - 1, row - 1))
+        {
+            Bitboard to_mask = bit << (((row - 1) * 8) - ((col - 1) - 97) - 1);
+            if (board.ouccupancy[opponentColor] & to_mask)
+                captureMove.push_back(string(1, col - 1) + to_string(row - 1));
+        }
+        if (col < 'h' && is_piece_present_in_square(board, col + 1, row - 1))
+        {
+            Bitboard to_mask = bit << (((row - 1) * 8) - ((col + 1) - 97) - 1);
+            if (board.ouccupancy[opponentColor] & to_mask)
+                captureMove.push_back(string(1, col + 1) + to_string(row - 1));
+        }
+    }
+    possible_moves.push_back(captureMove);
+    return possible_moves;
+}

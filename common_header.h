@@ -32,5 +32,14 @@ int is_king_move_valid(Board &board, string &moves,int flag);
 int is_knight_move_valid(Board &board, string &moves,int flag);  
 int is_queen_move_valid(Board &board, string &moves,int flag);  
 
+int moveGeneration(string moves, struct Board &board);
+void initializeBoard(Board &board);
+void printBoard(Board &board);
+void capturePieces(Bitboard to_mask, Board &board, int flag);
+
+vector<string> tempfun();
+vector<vector<string>> get_pawn_moves(Board &board, char col , int row);
+// bool isValidMoveInput(const string &move);
+
 
 int is_piece_present_in_square(Board &board, char col, int row);
