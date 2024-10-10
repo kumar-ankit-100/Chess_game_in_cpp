@@ -87,6 +87,101 @@ string handle_request(const string &json_request, Board &board)
         Bitboard from_mask = bit << ((row * 8) - (col - 97) - 1);
         int currentPlayer = board.ouccupancy[white] & from_mask ? white : black;
 
+        // Indirect check : moving of other piece leads to check of its king
+
+        if (pieceName != "king")
+        {
+            board.ouccupancy[currentPlayer] &= ~from_mask;
+            board.ouccupancy[both] &= ~from_mask;
+
+            if (is_king_in_check(board, currentPlayer))
+            {
+                cout << "Allowed Empty move: " << endl;
+                cout << "name: " << board.name << endl;
+                for (auto moves : board.emptySquares)
+                    cout << moves << " ";
+                cout << endl;
+                int is_pice_between_cheker_and_king = 0;
+                for (auto i : board.emptySquares)
+                {
+                    if (i == position)
+                        is_pice_between_cheker_and_king = 1;
+                }
+                board.ouccupancy[currentPlayer] = board.ouccupancy[currentPlayer] | from_mask;
+                board.ouccupancy[both] = board.ouccupancy[both] | from_mask;
+                if (is_pice_between_cheker_and_king)
+                {
+                    cout << "indirect check , you cannot move" << endl;
+
+                    if (pieceName == "queen")
+                    {
+                        possible_moves = get_queen_moves(board, col, row);
+                    }
+                    else if (pieceName == "rook")
+                    {
+                        possible_moves = get_rook_moves(board, col, row);
+                    }
+                    else if (pieceName == "bishop")
+                    {
+                        possible_moves = get_bishop_moves(board, col, row);
+                    }
+                    else if (pieceName == "knight")
+                    {
+                        response["possibleMoves"] = "";
+                        response["possibleCaptures"] = "";
+                        return response.dump();
+                    }
+                    else if (pieceName == "pawn")
+                    {
+                        possible_moves = get_pawn_moves(board, col, row);
+                                        }
+
+                    for (auto moves : board.emptySquares)
+                        cout << moves << " ";
+                    cout << endl;
+
+                    for (int i = 0; i <= 1; i++)
+                    {
+                        vector<string> vec1 = possible_moves[i];
+                        vector<string> vec2 = board.emptySquares;
+                        sort(vec1.begin(), vec1.end());
+                        sort(vec2.begin(), vec2.end());
+
+                        vector<string> intersection;
+
+                        // Find the intersection of vec1 and vec2
+                        set_intersection(
+                            vec1.begin(), vec1.end(),
+                            vec2.begin(), vec2.end(),
+                            back_inserter(intersection));
+
+                        // Output the intersection
+                        cout << "Intersection: ";
+                        for (const auto &item : intersection)
+                        {
+                            cout << item << " ";
+                        }
+                        cout << endl;
+                        if (i == 0)
+                        {
+                            response["possibleMoves"] = intersection;
+                        }
+                        if (i == 1)
+                        {
+                            response["possibleCaptures"] = intersection;
+                        }
+                    }
+
+                    return response.dump();
+                }
+            }
+            else
+            {
+                board.ouccupancy[currentPlayer] = board.ouccupancy[currentPlayer] | from_mask;
+                board.ouccupancy[both] = board.ouccupancy[both] | from_mask;
+            }
+        }
+
         // Check if the current player is in check
         if (is_king_in_check(board, currentPlayer))
         {

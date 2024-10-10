@@ -136,55 +136,8 @@ bool is_square_under_attack_by_bishop_or_queen(Board &board, char col, int row, 
 
     return false; // No attacking bishop or queen found
 }
-
-bool is_square_under_attack(Board &board, char col, int row, int opponentColor)
+bool is_square_under_attack_by_rook_or_queen(Board &board, char col, int row, int opponentColor)
 {
-    int pawnDirection = (opponentColor == white) ? -1 : 1;
-
-    // Check if the square is attacked by a pawn from the left diagonal
-    if (col > 'a')
-    { // Ensure the column is within bounds
-        if (board.pices[opponentColor][pawn] & (1ULL << ((row + pawnDirection) * 8 - (col - 1 - 97) - 1)))
-        {
-            return true;
-        }
-    }
-
-    // Check if the square is attacked by a pawn from the right diagonal
-    if (col < 'h')
-    { // Ensure the column is within bounds
-        if (board.pices[opponentColor][pawn] & (1ULL << ((row + pawnDirection) * 8 - (col + 1 - 97) - 1)))
-        {
-            return true;
-        }
-    }
-
-    // Define all possible knight moves (L-shaped)
-    int knightMoves[8][2] = {
-        {2, 1}, {2, -1}, {-2, 1}, {-2, -1}, // Vertical L-shapes
-        {1, 2},
-        {1, -2},
-        {-1, 2},
-        {-1, -2} // Horizontal L-shapes
-    };
-
-    for (auto &move : knightMoves)
-    {
-        char new_col = col + move[1];
-        int new_row = row + move[0];
-
-        // Check if the new position is within the board boundaries
-        if (new_col >= 'a' && new_col <= 'h' && new_row >= 1 && new_row <= 8)
-        {
-            Bitboard to_mask = 1ULL << ((new_row * 8) - (new_col - 97) - 1);
-
-            // Check if the square is occupied by an opponent's knight
-            if (board.pices[opponentColor][knight] & to_mask)
-            {
-                return true;
-            }
-        }
-    }
     // Get all possible rook or queen moves from the current position
     Bitboard bit = 1;
     Bitboard from_mask = bit << ((row * 8) - (col - 97) - 1);
@@ -275,6 +228,64 @@ bool is_square_under_attack(Board &board, char col, int row, int opponentColor)
             board.emptySquares.push_back(positionToString(col, j));
         }
     }
+
+    return false;
+}
+
+bool is_square_under_attack(Board &board, char col, int row, int opponentColor)
+{
+    int pawnDirection = (opponentColor == white) ? -1 : 1;
+
+    // Check if the square is attacked by a pawn from the left diagonal
+    if (col > 'a')
+    { // Ensure the column is within bounds
+        if (board.pices[opponentColor][pawn] & (1ULL << ((row + pawnDirection) * 8 - (col - 1 - 97) - 1)))
+        {
+            return true;
+        }
+    }
+
+    // Check if the square is attacked by a pawn from the right diagonal
+    if (col < 'h')
+    { // Ensure the column is within bounds
+        if (board.pices[opponentColor][pawn] & (1ULL << ((row + pawnDirection) * 8 - (col + 1 - 97) - 1)))
+        {
+            return true;
+        }
+    }
+
+    // Define all possible knight moves (L-shaped)
+    int knightMoves[8][2] = {
+        {2, 1}, {2, -1}, {-2, 1}, {-2, -1}, // Vertical L-shapes
+        {1, 2},
+        {1, -2},
+        {-1, 2},
+        {-1, -2} // Horizontal L-shapes
+    };
+
+    for (auto &move : knightMoves)
+    {
+        char new_col = col + move[1];
+        int new_row = row + move[0];
+
+        // Check if the new position is within the board boundaries
+        if (new_col >= 'a' && new_col <= 'h' && new_row >= 1 && new_row <= 8)
+        {
+            Bitboard to_mask = 1ULL << ((new_row * 8) - (new_col - 97) - 1);
+
+            // Check if the square is occupied by an opponent's knight
+            if (board.pices[opponentColor][knight] & to_mask)
+            {
+                return true;
+            }
+        }
+    }
+    // Check for rook/queen attacks (horizontal or vertical)
+    if (is_square_under_attack_by_rook_or_queen(board, col, row, opponentColor))
+    {
+        return true;
+    }
+
     // Check for bishop/queen attacks (diagonals)
     if (is_square_under_attack_by_bishop_or_queen(board, col, row, opponentColor))
     {

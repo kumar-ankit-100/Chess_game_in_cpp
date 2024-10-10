@@ -49,6 +49,8 @@ vector<vector<string>> get_king_moves(Board &board, char col, int row);
 
 bool is_king_in_check(Board &board, int kingColor);
 bool is_square_under_attack(Board &board, char col, int row, int opponentColor);
+bool is_square_under_attack_by_bishop_or_queen(Board &board, char col, int row, int opponentColor);
+bool is_square_under_attack_by_rook_or_queen(Board &board, char col, int row, int opponentColor);
 // bool isValidMoveInput(const string &move);
 
 
