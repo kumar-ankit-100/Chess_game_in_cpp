@@ -32,6 +32,40 @@ using namespace boost;
 // Global atomic flag for socket validity
 std::atomic<bool> socket_valid(true);
 
+string find_knight_checking_king(Board &board, char king_col, int king_row, int kingColor)
+{
+    // Define all possible knight moves (L-shaped)
+    int knightMoves[8][2] = {
+        {2, 1}, {2, -1}, {-2, 1}, {-2, -1}, // Vertical L-shapes
+        {1, 2},
+        {1, -2},
+        {-1, 2},
+        {-1, -2} // Horizontal L-shapes
+    };
+
+    int opponentColor = (kingColor == white) ? black : white;
+
+    for (auto &move : knightMoves)
+    {
+        char new_col = king_col + move[1];
+        int new_row = king_row + move[0];
+
+        // Check if the new position is within the board boundaries
+        if (new_col >= 'a' && new_col <= 'h' && new_row >= 1 && new_row <= 8)
+        {
+            Bitboard to_mask = 1ULL << ((new_row * 8) - (new_col - 97) - 1);
+
+            // Check if the square is occupied by an opponent's knight
+            if (board.pices[opponentColor][knight] & to_mask)
+            {
+                return positionToString(new_col, new_row);
+            }
+        }
+    }
+
+    return ""; // Return an empty string if no knight is checking the king
+}
+
 string handle_request(const string &json_request, Board &board)
 {
     std::cout << "Raw JSON request: " << json_request << std::endl;
@@ -61,6 +95,70 @@ string handle_request(const string &json_request, Board &board)
             for (auto moves : board.emptySquares)
                 cout << moves << " ";
             cout << endl;
+
+            // Find the king's position
+            char kingCol;
+            int kingRow;
+            Bitboard kingPosition = board.pices[currentPlayer][king];
+            for (int i = 0; i < 64; ++i)
+            {
+                if (kingPosition & (1ULL << i))
+                {
+
+                    kingCol = 'h' - (i % 8);
+                    kingRow = 1 + (i / 8);
+                    break;
+                }
+            }
+            string isCheckByKnight = find_knight_checking_king(board, kingCol, kingRow, currentPlayer);
+            if (!isCheckByKnight.empty())
+            {
+                cout << "check is given by knight" << endl;
+                if (pieceName == "knight")
+                {
+                    possible_moves = get_knight_moves(board, col, row);
+                }
+                else if (pieceName == "king")
+                {
+                    possible_moves = get_king_moves(board, col, row);
+                    response["possibleMoves"] = possible_moves[0];
+                    response["possibleCaptures"] = possible_moves[1];
+                    return response.dump();
+                }
+                else if (pieceName == "queen")
+                {
+                    possible_moves = get_queen_moves(board, col, row);
+                }
+                else if (pieceName == "pawn")
+                {
+                    possible_moves = get_pawn_moves(board, col, row);
+                }
+                else if (pieceName == "rook")
+                {
+                    possible_moves = get_rook_moves(board, col, row);
+                }
+                else if (pieceName == "bishop")
+                {
+                    possible_moves = get_bishop_moves(board, col, row);
+                }
+
+                vector<string> intersection;
+
+                cout << "Intersection: ";
+                for (auto i : possible_moves[1])
+                    if (i == isCheckByKnight)
+                        intersection.push_back(i);
+                for (const auto &item : intersection)
+                {
+                    cout << item << " ";
+                }
+                cout << endl;
+                response["possibleMoves"] = "";
+                response["possibleCaptures"] = intersection;
+
+                return response.dump();
+            }
+
             cout << (currentPlayer == white ? "White" : "Black") << " is in check!" << endl;
             // if (is_checkmate(board, currentPlayer))
             // {
@@ -79,6 +177,9 @@ string handle_request(const string &json_request, Board &board)
             else if (pieceName == "king")
             {
                 possible_moves = get_king_moves(board, col, row);
+                response["possibleMoves"] = possible_moves[0];
+                response["possibleCaptures"] = possible_moves[1];
+                return response.dump();
             }
             else if (pieceName == "queen")
             {
@@ -122,7 +223,7 @@ string handle_request(const string &json_request, Board &board)
                 cout << endl;
                 if (i == 0)
                 {
-                    response["possibleMoves"] = intersection;  
+                    response["possibleMoves"] = intersection;
                 }
                 if (i == 1)
                 {
