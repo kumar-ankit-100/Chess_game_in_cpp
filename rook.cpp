@@ -17,7 +17,7 @@ int is_rook_move_valid(Board &board, string &moves, int flag)
         // if file is same then check is there any pieces in between source and destination
         int source = (moves[1] - 48);
         int destination = moves[3] - 48;
-        cout << source << " " << destination << endl;
+        // cout << source << " " << destination << endl;
 
         if (source <= destination)
         {
@@ -64,7 +64,7 @@ int is_rook_move_valid(Board &board, string &moves, int flag)
         // if rank  is same then check is there any pieces in between source and destination
         int source = (moves[0] - 97);
         int destination = moves[2] - 97;
-        cout << source << " " << destination << endl;
+        // cout << source << " " << destination << endl;
         if (source <= destination)
         {
             source = source + 1;
@@ -111,7 +111,7 @@ vector<vector<string>> get_rook_moves(Board &board, char col, int row)
     vector<vector<string>> possible_moves;
     vector<string> straightMoves;
     Bitboard bit = 1;
-    cout << "bit is shift by " << ((row * 8) - (col - 97) - 1) << endl;
+    // cout << "bit is shift by " << ((row * 8) - (col - 97) - 1) << endl;
     Bitboard from_mask = bit << ((row * 8) - (col - 97) - 1);
     int flag = board.ouccupancy[white] & from_mask ? 1 : 0; // Check if it's a white rook
 

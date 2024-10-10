@@ -108,13 +108,13 @@ vector<vector<string>> get_pawn_moves(Board &board, char col, int row)
     vector<vector<string>> possible_moves;
     vector<string> emptyMove;
     Bitboard bit = 1;
-    cout << "bit is shift by " << ((row * 8) - (col - 97) - 1) << endl;
+    // cout << "bit is shift by " << ((row * 8) - (col - 97) - 1) << endl;
     Bitboard from_mask = bit << ((row * 8) - (col - 97) - 1);
     int flag = board.ouccupancy[white] & from_mask ? 1 : 0;
     // Calculate forward move (one step forward)
     if (flag) // white pawn
     {
-        cout << "white pawn" << endl;
+        // cout << "white pawn" << endl;
         if (!is_piece_present_in_square(board, col, row + 1))
         {
             emptyMove.push_back(string(1, col) + to_string(row + 1));
@@ -126,7 +126,7 @@ vector<vector<string>> get_pawn_moves(Board &board, char col, int row)
     }
     else // black pawn
     {
-        cout << "black pawn" << endl;
+        // cout << "black pawn" << endl;
         if (!is_piece_present_in_square(board, col, row - 1))
         {
             emptyMove.push_back(string(1, col) + to_string(row - 1));
@@ -143,7 +143,7 @@ vector<vector<string>> get_pawn_moves(Board &board, char col, int row)
     int opponentColor = flag ? black : white;
     if (flag) // white pawn captures
     {
-        cout << "white pawn and capture piece available" << endl;
+        // cout << "white pawn and capture piece available" << endl;
 
         if (col > 'a' && is_piece_present_in_square(board, col - 1, row + 1))
         {
@@ -161,7 +161,7 @@ vector<vector<string>> get_pawn_moves(Board &board, char col, int row)
     else // black pawn captures
     {
 
-        cout << "black pawn and capture piece available" << endl;
+        // cout << "black pawn and capture piece available" << endl;
         if (col > 'a' && is_piece_present_in_square(board, col - 1, row - 1))
         {
             Bitboard to_mask = bit << (((row - 1) * 8) - ((col - 1) - 97) - 1);

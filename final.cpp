@@ -42,32 +42,63 @@ string handle_request(const string &json_request, Board &board)
     if (purpose == "generateMove")
     {
         string position = request["position"];
-        // Extract column and row from position (e.g., 'b3' -> col = 'b', row = 3)
         char col = position[0];
         int row = position[1] - '0';
         string pieceName = request["pieceName"];
         vector<vector<string>> possible_moves;
+
+        Bitboard bit = 1;
+        Bitboard from_mask = bit << ((row * 8) - (col - 97) - 1);
+        int currentPlayer = board.ouccupancy[white] & from_mask ? white : black;
+
+        // Check if the current player is in check
+        if (is_king_in_check(board, currentPlayer))
+        {
+            cout << (currentPlayer == white ? "White" : "Black") << " is in check!" << endl;
+            if (is_checkmate(board, currentPlayer))
+            {
+                cout << (currentPlayer == white ? "Black" : "White") << " wins by checkmate!" << endl;
+                response["status"] = "checkmate";
+                response["message"] = "king is in checkmate";
+                return response.dump();
+            }
+            response["status"] = "check";
+            response["message"] = "king is in checkmate";
+            return response.dump();
+        }
+        else if (is_stalemate(board, currentPlayer))
+        {
+            cout << "The game is a draw by stalemate!" << endl;
+            response["status"] = "stalemate";
+            response["message"] = "king is in stalemate";
+            return response.dump();
+        }
+        else
+        {
+            cout << (currentPlayer == white ? "White" : "Black") << " is not in check!" << endl;
+        }
+
         if (pieceName == "knight")
         {
             possible_moves = get_knight_moves(board, col, row);
         }
-        if (pieceName == "king")
+        else if (pieceName == "king")
         {
             possible_moves = get_king_moves(board, col, row);
         }
-        if (pieceName == "queen")
+        else if (pieceName == "queen")
         {
             possible_moves = get_queen_moves(board, col, row);
         }
-        if (pieceName == "pawn")
+        else if (pieceName == "pawn")
         {
             possible_moves = get_pawn_moves(board, col, row);
         }
-        if (pieceName == "rook")
+        else if (pieceName == "rook")
         {
             possible_moves = get_rook_moves(board, col, row);
         }
-        if (pieceName == "bishop")
+        else if (pieceName == "bishop")
         {
             possible_moves = get_bishop_moves(board, col, row);
         }
@@ -150,7 +181,7 @@ string encode_websocket_frame(const string &message)
 {
     string frame;
     frame += 0x81; // First byte: FIN bit set, opcode for text frame (0x1)
-    
+
     // Payload length encoding
     if (message.size() <= 125)
     {
@@ -175,7 +206,6 @@ string encode_websocket_frame(const string &message)
     frame += message;
     return frame;
 }
-
 
 class WebSocketSession : public std::enable_shared_from_this<WebSocketSession>
 {
