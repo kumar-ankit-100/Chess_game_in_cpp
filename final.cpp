@@ -87,6 +87,23 @@ string handle_request(const string &json_request, Board &board)
         Bitboard from_mask = bit << ((row * 8) - (col - 97) - 1);
         int currentPlayer = board.ouccupancy[white] & from_mask ? white : black;
 
+        // Find the opponent king's position
+        char kingCol;
+        int kingRow;
+        Bitboard kingPositionInBit = board.pices[!currentPlayer][king];
+        for (int i = 0; i < 64; ++i)
+        {
+            if (kingPositionInBit & (1ULL << i))
+            {
+
+                kingCol = 'h' - (i % 8);
+                kingRow = 1 + (i / 8);
+                break;
+            }
+        }
+        string kingPositionInString = positionToString(kingCol, kingRow);
+        cout << "king position : " << kingPositionInString << endl;
+
         // Indirect check : moving of other piece leads to check of its king
 
         if (pieceName != "king")
@@ -134,7 +151,7 @@ string handle_request(const string &json_request, Board &board)
                     else if (pieceName == "pawn")
                     {
                         possible_moves = get_pawn_moves(board, col, row);
-                                        }
+                    }
 
                     for (auto moves : board.emptySquares)
                         cout << moves << " ";
@@ -191,20 +208,6 @@ string handle_request(const string &json_request, Board &board)
                 cout << moves << " ";
             cout << endl;
 
-            // Find the king's position
-            char kingCol;
-            int kingRow;
-            Bitboard kingPosition = board.pices[currentPlayer][king];
-            for (int i = 0; i < 64; ++i)
-            {
-                if (kingPosition & (1ULL << i))
-                {
-
-                    kingCol = 'h' - (i % 8);
-                    kingRow = 1 + (i / 8);
-                    break;
-                }
-            }
             string isCheckByKnight = find_knight_checking_king(board, kingCol, kingRow, currentPlayer);
             if (!isCheckByKnight.empty())
             {
@@ -366,7 +369,13 @@ string handle_request(const string &json_request, Board &board)
         }
 
         response["possibleMoves"] = possible_moves[0];
-        response["possibleCaptures"] = possible_moves[1];
+        vector<string> temp;
+        for (auto i : possible_moves[1])
+        {
+            if (i != kingPositionInString)
+                temp.push_back(i);
+        }
+        response["possibleCaptures"] = temp;
     }
     else if (purpose == "updateBoard")
     {
