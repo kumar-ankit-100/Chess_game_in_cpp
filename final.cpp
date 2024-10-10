@@ -15,6 +15,8 @@
 #include <boost/bind/bind.hpp>
 #include <memory>
 #include <vector>
+#include <algorithm> // for set_intersection and sort
+#include <iterator>  // for back_inserter
 
 #include "common_header.h"
 #include "json.hpp"
@@ -54,25 +56,89 @@ string handle_request(const string &json_request, Board &board)
         // Check if the current player is in check
         if (is_king_in_check(board, currentPlayer))
         {
+            cout << "Allowed Empty move: " << endl;
+            cout << "name: " << board.name << endl;
+            for (auto moves : board.emptySquares)
+                cout << moves << " ";
+            cout << endl;
             cout << (currentPlayer == white ? "White" : "Black") << " is in check!" << endl;
-            if (is_checkmate(board, currentPlayer))
+            // if (is_checkmate(board, currentPlayer))
+            // {
+            //     cout << (currentPlayer == white ? "Black" : "White") << " wins by checkmate!" << endl;
+            //     response["status"] = "checkmate";
+            //     response["message"] = "king is in checkmate";
+            //     return response.dump();
+            // }
+            // response["status"] = "check";
+            // response["message"] = "king is not in checkmate";
+
+            if (pieceName == "knight")
             {
-                cout << (currentPlayer == white ? "Black" : "White") << " wins by checkmate!" << endl;
-                response["status"] = "checkmate";
-                response["message"] = "king is in checkmate";
-                return response.dump();
+                possible_moves = get_knight_moves(board, col, row);
             }
-            response["status"] = "check";
-            response["message"] = "king is in checkmate";
+            else if (pieceName == "king")
+            {
+                possible_moves = get_king_moves(board, col, row);
+            }
+            else if (pieceName == "queen")
+            {
+                possible_moves = get_queen_moves(board, col, row);
+            }
+            else if (pieceName == "pawn")
+            {
+                possible_moves = get_pawn_moves(board, col, row);
+            }
+            else if (pieceName == "rook")
+            {
+                possible_moves = get_rook_moves(board, col, row);
+            }
+            else if (pieceName == "bishop")
+            {
+                possible_moves = get_bishop_moves(board, col, row);
+            }
+
+            // Sort both vectors before applying set_intersection
+            for (int i = 0; i <= 1; i++)
+            {
+                vector<string> vec1 = possible_moves[i];
+                vector<string> vec2 = board.emptySquares;
+                sort(vec1.begin(), vec1.end());
+                sort(vec2.begin(), vec2.end());
+
+                vector<string> intersection;
+
+                // Find the intersection of vec1 and vec2
+                set_intersection(
+                    vec1.begin(), vec1.end(),
+                    vec2.begin(), vec2.end(),
+                    back_inserter(intersection));
+
+                // Output the intersection
+                cout << "Intersection: ";
+                for (const auto &item : intersection)
+                {
+                    cout << item << " ";
+                }
+                cout << endl;
+                if (i == 0)
+                {
+                    response["possibleMoves"] = intersection;  
+                }
+                if (i == 1)
+                {
+                    response["possibleCaptures"] = intersection;
+                }
+            }
+
             return response.dump();
         }
-        else if (is_stalemate(board, currentPlayer))
-        {
-            cout << "The game is a draw by stalemate!" << endl;
-            response["status"] = "stalemate";
-            response["message"] = "king is in stalemate";
-            return response.dump();
-        }
+        // else if (is_stalemate(board, currentPlayer))
+        // {
+        //     cout << "The game is a draw by stalemate!" << endl;
+        //     response["status"] = "stalemate";
+        //     response["message"] = "king is in stalemate";
+        //     return response.dump();
+        // }
         else
         {
             cout << (currentPlayer == white ? "White" : "Black") << " is not in check!" << endl;

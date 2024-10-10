@@ -10,12 +10,23 @@ bool is_king_in_check(Board &board, int kingColor)
     {
         if (kingPosition & (1ULL << i))
         {
-            kingCol = 'a' + (i % 8);
+
+            kingCol = 'h' - (i % 8);
             kingRow = 1 + (i / 8);
+            cout << "king row and col and i" << kingRow << " " << kingCol << " " << i << endl;
             break;
         }
     }
     int opponentColor = (kingColor == white) ? black : white;
+    // if (is_square_under_attack(board, kingCol, kingRow, opponentColor))
+    // {
+    //     cout << "Allowed Empty move: " << endl;
+    //     for (auto moves : board.emptySquares)
+    //         cout << moves << " ";
+    //     cout << endl;
+    //     cout << "Size of emptySquares: " << board.emptySquares.size() << endl;
+    //     cout<<"name : "<<board.name<<endl;
+    // }
     return is_square_under_attack(board, kingCol, kingRow, opponentColor);
 }
 

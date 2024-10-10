@@ -7,6 +7,8 @@ struct Board
 
   Bitboard pices[2][6];
   Bitboard ouccupancy[3];
+  string name ; 
+  vector<string> emptySquares;
 };
 enum
 {
