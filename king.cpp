@@ -406,7 +406,8 @@ vector<vector<string>> get_king_moves(Board &board, char col, int row)
         {-1, 1},
         {-1, -1} // Diagonal
     };
-
+    board.ouccupancy[flag] &= ~from_mask;
+    board.ouccupancy[both] &= ~from_mask;
     for (auto &move : kingMoves)
     {
         char new_col = col + move[1];
@@ -435,6 +436,8 @@ vector<vector<string>> get_king_moves(Board &board, char col, int row)
             }
         }
     }
+    board.ouccupancy[flag] |= from_mask;
+    board.ouccupancy[both] |= from_mask;
 
     possible_moves.push_back(moveList);    // Normal moves
     possible_moves.push_back(captureList); // Capture moves
