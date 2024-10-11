@@ -30,38 +30,29 @@ bool is_king_in_check(Board &board, int kingColor)
     return is_square_under_attack(board, kingCol, kingRow, opponentColor);
 }
 
-bool is_move_legal(Board &board, string move, int currentPlayer)
-{
-    // Create a copy of the board to simulate the move
-    Board tempBoard = board;
-
-    // Apply the move to the temporary board
-    if (!moveGeneration(move, tempBoard))
-    {
-        return false; // Invalid move
-    }
-
-    // Check if the current player's king is in check after the move
-    return !is_king_in_check(tempBoard, currentPlayer);
-}
-
 bool is_checkmate(Board &board, int currentPlayer)
 {
-    // If the king is not in check, it's not checkmate
+    // Get the king's position
+    string kingPos = kingPosition(board, currentPlayer);
+    char kingCol = kingPos[0];
+    int kingRow = kingPos[1] - '0';
+
+    // Check if the king is in check
     if (!is_king_in_check(board, currentPlayer))
     {
-        return false;
+        return false; // Not in check, so not checkmate
     }
 
-    // Generate all possible moves for the current player
-    vector<string> allMoves;
+    // Try all possible moves for the current player
     for (char col = 'a'; col <= 'h'; ++col)
     {
         for (int row = 1; row <= 8; ++row)
         {
-            Bitboard from_mask = 1ULL << ((row * 8) - (col - 'a') - 1);
+            Bitboard bit = 1;
+            Bitboard from_mask = bit << ((row * 8) - (col - 97) - 1);
             if (board.ouccupancy[currentPlayer] & from_mask)
             {
+                // Get the piece type at this position
                 vector<vector<string>> pieceMoves;
                 if (board.pices[currentPlayer][pawn] & from_mask)
                 {
@@ -88,91 +79,36 @@ bool is_checkmate(Board &board, int currentPlayer)
                     pieceMoves = get_king_moves(board, col, row);
                 }
 
+                // Check if any move can remove the check
                 for (const auto &moveList : pieceMoves)
                 {
-                    for (const auto &dest : moveList)
+                    for (const auto &move : moveList)
                     {
-                        allMoves.push_back(string(1, col) + to_string(row) + dest);
+                        // Simulate the move
+                        Bitboard to_mask = bit << ((move[1] - '0') * 8 - (move[0] - 97) - 1);
+                        board.ouccupancy[currentPlayer] &= ~from_mask;
+                        board.ouccupancy[currentPlayer] |= to_mask;
+                        board.ouccupancy[both] &= ~from_mask;
+                        board.ouccupancy[both] |= to_mask;
+
+                        bool stillInCheck = is_king_in_check(board, currentPlayer);
+
+                        // Undo the move
+                        board.ouccupancy[currentPlayer] &= ~to_mask;
+                        board.ouccupancy[currentPlayer] |= from_mask;
+                        board.ouccupancy[both] &= ~to_mask;
+                        board.ouccupancy[both] |= from_mask;
+
+                        if (!stillInCheck)
+                        {
+                            return false; // Found a move that removes the check
+                        }
                     }
                 }
             }
         }
     }
 
-    // Check if any of the moves can get the king out of check
-    for (const auto &move : allMoves)
-    {
-        if (is_move_legal(board, move, currentPlayer))
-        {
-            return false; // Found a legal move, not checkmate
-        }
-    }
-
-    return true; // No legal moves found, it's checkmate
+    return true; // No legal moves to remove the check, so it's checkmate
 }
 
-bool is_stalemate(Board &board, int currentPlayer)
-{
-    // If the king is in check, it's not stalemate
-    if (is_king_in_check(board, currentPlayer))
-    {
-        return false;
-    }
-
-    // Generate all possible moves for the current player
-    vector<string> allMoves;
-    for (char col = 'a'; col <= 'h'; ++col)
-    {
-        for (int row = 1; row <= 8; ++row)
-        {
-            Bitboard from_mask = 1ULL << ((row * 8) - (col - 'a') - 1);
-            if (board.ouccupancy[currentPlayer] & from_mask)
-            {
-                vector<vector<string>> pieceMoves;
-                if (board.pices[currentPlayer][pawn] & from_mask)
-                {
-                    pieceMoves = get_pawn_moves(board, col, row);
-                }
-                else if (board.pices[currentPlayer][rook] & from_mask)
-                {
-                    pieceMoves = get_rook_moves(board, col, row);
-                }
-                else if (board.pices[currentPlayer][knight] & from_mask)
-                {
-                    pieceMoves = get_knight_moves(board, col, row);
-                }
-                else if (board.pices[currentPlayer][bishop] & from_mask)
-                {
-                    pieceMoves = get_bishop_moves(board, col, row);
-                }
-                else if (board.pices[currentPlayer][queen] & from_mask)
-                {
-                    pieceMoves = get_queen_moves(board, col, row);
-                }
-                else if (board.pices[currentPlayer][king] & from_mask)
-                {
-                    pieceMoves = get_king_moves(board, col, row);
-                }
-
-                for (const auto &moveList : pieceMoves)
-                {
-                    for (const auto &dest : moveList)
-                    {
-                        allMoves.push_back(string(1, col) + to_string(row) + dest);
-                    }
-                }
-            }
-        }
-    }
-
-    // Check if any of the moves are legal
-    for (const auto &move : allMoves)
-    {
-        if (is_move_legal(board, move, currentPlayer))
-        {
-            return false; // Found a legal move, not stalemate
-        }
-    }
-
-    return true; // No legal moves found, it's stalemate
-}

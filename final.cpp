@@ -113,6 +113,16 @@ string handle_request(const string &json_request, Board &board)
         char kingCol = kingPositionInString[0];
         int kingRow = kingPositionInString[1] - 48;
 
+        // First we check for checkmate , we check that either king have safe place to move or not
+
+        if (is_checkmate(board, currentPlayer))
+        {
+            cout << "Checkmate! " << (currentPlayer == white ? "Black" : "White") << " Wins !" << endl;
+            response["status"] = "Checkmate";
+            response["winColor"] = (currentPlayer == white ? "Black" : "White");
+            return response.dump();
+        }
+
         // Indirect check : moving of other piece leads to check of its king
 
         if (pieceName != "king")
