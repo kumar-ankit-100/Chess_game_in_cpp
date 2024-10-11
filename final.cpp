@@ -54,6 +54,7 @@ string find_knight_checking_king(Board &board, char king_col, int king_row, int 
         if (new_col >= 'a' && new_col <= 'h' && new_row >= 1 && new_row <= 8)
         {
             Bitboard to_mask = 1ULL << ((new_row * 8) - (new_col - 97) - 1);
+            // cout<<"knight checked position : "<<new_col<<new_row<<endl;
 
             // Check if the square is occupied by an opponent's knight
             if (board.pices[opponentColor][knight] & to_mask)
@@ -64,6 +65,26 @@ string find_knight_checking_king(Board &board, char king_col, int king_row, int 
     }
 
     return ""; // Return an empty string if no knight is checking the king
+}
+
+string kingPosition(Board &board, int pieceColor)
+{
+    // Find the opponent king's position
+    char kingCol;
+    int kingRow;
+    Bitboard kingPositionInBit = board.pices[pieceColor][king];
+    for (int i = 0; i < 64; ++i)
+    {
+        if (kingPositionInBit & (1ULL << i))
+        {
+
+            kingCol = 'h' - (i % 8);
+            kingRow = 1 + (i / 8);
+            break;
+        }
+    }
+    string kingPositionInString = positionToString(kingCol, kingRow);
+    return kingPositionInString;
 }
 
 string handle_request(const string &json_request, Board &board)
@@ -87,22 +108,10 @@ string handle_request(const string &json_request, Board &board)
         Bitboard from_mask = bit << ((row * 8) - (col - 97) - 1);
         int currentPlayer = board.ouccupancy[white] & from_mask ? white : black;
 
-        // Find the opponent king's position
-        char kingCol;
-        int kingRow;
-        Bitboard kingPositionInBit = board.pices[!currentPlayer][king];
-        for (int i = 0; i < 64; ++i)
-        {
-            if (kingPositionInBit & (1ULL << i))
-            {
-
-                kingCol = 'h' - (i % 8);
-                kingRow = 1 + (i / 8);
-                break;
-            }
-        }
-        string kingPositionInString = positionToString(kingCol, kingRow);
+        string kingPositionInString = kingPosition(board, currentPlayer);
         cout << "king position : " << kingPositionInString << endl;
+        char kingCol = kingPositionInString[0];
+        int kingRow = kingPositionInString[1] - 48;
 
         // Indirect check : moving of other piece leads to check of its king
 
@@ -199,7 +208,8 @@ string handle_request(const string &json_request, Board &board)
             }
         }
 
-        // Check if the current player is in check
+        // direct check
+        //  Check if the current player is in check
         if (is_king_in_check(board, currentPlayer))
         {
             cout << "Allowed Empty move: " << endl;
@@ -207,11 +217,16 @@ string handle_request(const string &json_request, Board &board)
             for (auto moves : board.emptySquares)
                 cout << moves << " ";
             cout << endl;
-
+            // cout<<"finding knight "<<endl;
             string isCheckByKnight = find_knight_checking_king(board, kingCol, kingRow, currentPlayer);
+            // for(auto i : isCheckByKnight)
+            // cout<<i<<" ";
+            // cout<<endl;
+            // cout<<"finding knight completed "<<endl;
+
             if (!isCheckByKnight.empty())
             {
-                cout << "check is given by knight" << endl;
+                cout << "check is given by knight position : " << isCheckByKnight << endl;
                 if (pieceName == "knight")
                 {
                     possible_moves = get_knight_moves(board, col, row);
@@ -370,9 +385,10 @@ string handle_request(const string &json_request, Board &board)
 
         response["possibleMoves"] = possible_moves[0];
         vector<string> temp;
+        string opponentKingPosition = kingPosition(board, !currentPlayer);
         for (auto i : possible_moves[1])
         {
-            if (i != kingPositionInString)
+            if (i != opponentKingPosition)
                 temp.push_back(i);
         }
         response["possibleCaptures"] = temp;
