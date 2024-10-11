@@ -237,19 +237,23 @@ bool is_square_under_attack(Board &board, char col, int row, int opponentColor)
     int pawnDirection = (opponentColor == white) ? -1 : 1;
 
     // Check if the square is attacked by a pawn from the left diagonal
+    board.emptySquares.clear(); // Clear the vector for each direction
     if (col > 'a')
     { // Ensure the column is within bounds
         if (board.pices[opponentColor][pawn] & (1ULL << ((row + pawnDirection) * 8 - (col - 1 - 97) - 1)))
         {
+            board.emptySquares.push_back(positionToString(col - 1, row + pawnDirection));
             return true;
         }
     }
 
     // Check if the square is attacked by a pawn from the right diagonal
+    board.emptySquares.clear(); // Clear the vector for each direction
     if (col < 'h')
     { // Ensure the column is within bounds
         if (board.pices[opponentColor][pawn] & (1ULL << ((row + pawnDirection) * 8 - (col + 1 - 97) - 1)))
         {
+            board.emptySquares.push_back(positionToString(col + 1, row + pawnDirection));
             return true;
         }
     }
