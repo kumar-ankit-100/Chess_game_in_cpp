@@ -17,10 +17,10 @@
 #include <vector>
 #include <algorithm> // for set_intersection and sort
 #include <iterator>  // for back_inserter
+#include <unordered_map>
 
-#include "common_header.h"
-#include "json.hpp"
-using json = nlohmann::json;
+// #include "common_header.h"
+#include "gameManager.hpp"
 
 using boost::asio::ip::tcp;
 using namespace std;
@@ -408,6 +408,10 @@ string handle_request(const string &json_request, Board &board)
         string move = request["position"];
         // Process the move on the board
         // bool success = update_board(board, move);
+        cout << "updated move : ";
+        for (auto i : move)
+            cout << i << " ";
+        cout << endl;
         bool success = moveGeneration(move, board);
         printBoard(board);
 
@@ -504,13 +508,77 @@ string encode_websocket_frame(const string &message)
     return frame;
 }
 
+std::atomic<int> pendingPlayer{-1};
+// Global map to store player relationships
+std::map<int, int> player_relationships;
+std::mutex relationships_mutex;
+std::mutex sockets_mutex;
+
+std::unordered_map<int, std::shared_ptr<tcp::socket>> idToSocket;
+
+// Mutex to protect access to the map (optional for thread safety)
+std::mutex idToSocketMutex;
+std::mutex read_mutex;
+std::mutex isCheckmateMutex;
+
+void notify_match_started(tcp::socket &socket)
+{
+    int socket_id = socket.native_handle();
+    auto game_it = game_manager.findGameBySocket(socket_id);
+    if (game_it == game_manager.games.end())
+    {
+        std::cerr << "Error: Game not found for socket " << socket_id << std::endl;
+        return;
+    }
+
+    std::shared_ptr<Game> game = game_it->second;
+    int opponent_socket_id = game->getOpponentSocket(socket_id);
+
+    std::string color = (socket_id == game->white_socket) ? "white" : "black";
+    std::string opponent_color = (color == "white") ? "black" : "white";
+
+    std::cout << "Match started: " << color << " (socket " << socket_id
+              << ") vs " << opponent_color << " (socket " << opponent_socket_id << ")" << std::endl;
+
+    // JSON message for the player
+    json message = {
+        {"message", "Match started"},
+        {"your_socket_id", socket_id},
+        {"opponent_socket_id", opponent_socket_id},
+        {"color", color}};
+
+    // Convert JSON to WebSocket frame
+    std::string encoded_message = encode_websocket_frame(message.dump());
+
+    // Mutex lock to prevent race conditions while sending messages
+    {
+        std::lock_guard<std::mutex> lock(sockets_mutex);
+
+        // Send the message to the player
+        asio::async_write(socket, asio::buffer(encoded_message),
+                          [socket_id, color](boost::system::error_code ec, std::size_t /*length*/)
+                          {
+                              if (!ec)
+                              {
+                                  std::cout << "Notified " << color << " player: " << socket_id << std::endl;
+                              }
+                              else
+                              {
+                                  std::cerr << "Error notifying " << color << " player: " << ec.message() << std::endl;
+                              }
+                          });
+    }
+}
+
 class WebSocketSession : public std::enable_shared_from_this<WebSocketSession>
 {
 public:
-    WebSocketSession(tcp::socket socket, asio::io_context &context, Board &board)
+    WebSocketSession(tcp::socket socket, asio::io_context &context)
         : socket_(std::move(socket)),
           strand_(asio::make_strand(context)),
-          timer_(context), board(board) {}
+          timer_(context),
+          matched_(false),
+          opponent_socket_id_(-1) {}
 
     void start()
     {
@@ -550,13 +618,50 @@ private:
                           asio::bind_executor(strand_, [this, self](boost::system::error_code ec, std::size_t /*length*/)
                                               {
                 if (!ec) {
-                    cout<<"handshake completed and socket id:"<<socket_.native_handle()<<endl;
-                     
-                    // Start reading messages from the client
-                    do_read();
-                    // Start sending periodic messages to the client
-                    do_send_periodic_messages();
+                    cout << "handshake completed and socket id:" << socket_.native_handle() << endl;
+                   
+                    if (!matched_) {
+                        check_for_match();
+                    } else {
+                        do_read();
+                        // do_send_periodic_messages();
+                    }
                 } }));
+    }
+    // void storeSocket(int socket_id, tcp::socket socket)
+    // {
+    //     std::lock_guard<std::mutex> lock(idToSocketMutex); // Lock the mutex for thread safety
+    //     idToSocket[socket_id] = std::make_shared<tcp::socket>(std::move(socket));
+    // }
+
+    void check_for_match()
+    {
+        auto self = shared_from_this();
+        asio::post(strand_, [this, self]()
+                   {
+            if (matched_) return;  // Skip if already matched
+            int currentSocket = socket_.native_handle();
+            int expectedPending = -1;
+            if (pendingPlayer.compare_exchange_strong(expectedPending, currentSocket)) {
+                // This player becomes the pending player
+                std::cout << "Waiting for opponent. Socket: " << currentSocket << std::endl;
+                wait_for_opponent();
+            } else {
+                // Match found
+                int opponent = pendingPlayer.exchange(-1);
+                matched_ = true;
+                // Update the player relationships map
+                
+                game_manager.makeGame(currentSocket,opponent);
+                std::cout << "Match started between sockets: " << opponent << " and " << currentSocket << std::endl;
+                
+                // Notify both players
+                // notify_match_started(opponent, currentSocket);   
+                notify_match_started(socket_);
+                
+                do_read();
+                // do_send_periodic_messages();
+            } });
     }
 
     void do_read()
@@ -566,24 +671,112 @@ private:
                                 asio::bind_executor(strand_, [this, self](boost::system::error_code ec, std::size_t length)
                                                     {
                 if (!ec) {
-                    std::string message = decode_websocket_frame(read_buffer_, length);
+                    std::string message ;
+                    {
+                       // Lock the mutex before accessing the shared buffer
+                       std::lock_guard<std::mutex> lock(read_mutex);
+                       message = decode_websocket_frame(read_buffer_, length);
+                    }
                     std::cout << "Received: " << message << std::endl;
+                             string response ;
+                           try {
+                                json request = json::parse(message);
+                                string purpose = request["purpose"];
+                          
+                    
+                    if(purpose == "givemeopponentupdate"){
+                        json temp;
+                        auto it = game_manager.findGameBySocket(socket_.native_handle());
+                          if (it == game_manager.games.end()){
+                              temp["erroringame"]="player not found invalid socket id ";
+                          }
+                          else{
+                            std::lock_guard<std::mutex> lock(isCheckmateMutex);
+                                  std::shared_ptr<Game> game = it->second;
+                            if (is_checkmate(game->nboard, white))
+                              {
+                                cout << "Checkmate! " <<  "Black Wins !" << endl;
+                                temp["status"] = "Checkmate";
+                                temp["winColor"] = "Black" ;
+                              }
+                            else if(is_checkmate(game->nboard, black)){
+                                cout << "Checkmate! " << "White Wins !" << endl;
+                                temp["status"] = "Checkmate";
+                                temp["winColor"] = "White";
+                            }
+                            //   else{
+                             int opponent_socket_id = game->getOpponentSocket(socket_.native_handle());
 
-                    json parsedMessage = json::parse(message);
-                    cout<<parsedMessage.dump()<<endl;
-                    string response = handle_request(message,board);
+                             std::string color = (socket_.native_handle() == game->white_socket) ? "white" : "black";
+                             std::string opponent_color = (color == "white") ? "black" : "white";
+                            temp["purpose"]="updateBoard";
+                            temp["previousMove"]=game->previousMove;
+                            temp["colorToUpdate"]=opponent_color;
 
+                            //   }
+                          
 
+                          }
+                        response= temp.dump();
+                        
+                    }
+                    else{
+                    pair<int,string> response_pair = game_manager.handleMove(socket_.native_handle(),message);
+                    if(response_pair.first){
+                        cout<<"valid move"<<endl;
+                        response =  response_pair.second;
+                    }
+                    else{
+                        cout << "Invalid move" << endl;
+                        response = "Invalid move!";
+                    }
+                    }
+                              } catch (nlohmann::json::parse_error& e) {
+                                  std::cerr << "Error parsing JSON: " << e.what() << std::endl;
+                                  json temp;
+                                  temp["ErrorIN"]="Error in parsing";
+                                  response = temp.dump();  // Handle this gracefully by ignoring or logging the invalid message.
+                            }
+
+                    
+
+                    
 
                     std::string response_frame = encode_websocket_frame(response);
                     do_write(response_frame);
 
-                    // Continue reading
+                    // Continue reading without checking for match again
                     do_read();
                 } else {
                     std::cout << "Client disconnected or error occurred: " << ec.message() << std::endl;
                     socket_.close();
                 } }));
+    }
+    void wait_for_opponent()
+    {
+        auto self = shared_from_this();
+        timer_.expires_after(std::chrono::milliseconds(500));
+        timer_.async_wait(asio::bind_executor(strand_, [this, self](boost::system::error_code ec)
+                                              {
+            if (!ec) {
+                if (!matched_) {
+                    // Check if we're still the pending player
+                    if (pendingPlayer.load() == socket_.native_handle()) {
+                        // Still waiting, check again
+                        cout<<"Waitign again"<<endl;
+                        wait_for_opponent();
+                    } else {
+                        // We've been matched
+                        cout<<"Waiting completed! match have been started also for "<<socket_.native_handle()<<endl;
+                        notify_match_started(socket_);
+                        matched_ = true;
+                        do_read();
+                        // do_send_periodic_messages();
+                    }
+                }
+            } else if (ec != asio::error::operation_aborted) {
+                std::cerr << "Timer error: " << ec.message() << std::endl;
+            } }));
     }
 
     void do_send_periodic_messages()
@@ -593,19 +786,39 @@ private:
         timer_.async_wait(asio::bind_executor(strand_, [this, self](boost::system::error_code ec)
                                               {
             if (!ec) {
-                std::string message = "Hello from the server!";
+                // std::string message = "Periodic update: Your socket ID is " + 
+                //                       std::to_string(socket_.native_handle()) + 
+                //                       ". Your opponent's socket ID is " + 
+                //                       std::to_string(opponent_socket_id_);
+                int currentSocket = socket_.native_handle();
+                std::string message;
+                 {
+                    std::lock_guard<std::mutex> lock(relationships_mutex);
+                    auto it = player_relationships.find(currentSocket);
+                    if (it != player_relationships.end()) {
+                        message = "Periodic update: Your socket ID is " + std::to_string(currentSocket) + 
+                                  ". Your opponent's socket ID is " + std::to_string(it->second);
+                    } else {
+                        message = "Periodic update: Your socket ID is " + std::to_string(currentSocket) + 
+                                  ". Waiting for an opponent...";
+                    }
+                }
+                
                 std::string encoded_message = encode_websocket_frame(message);
                 asio::async_write(socket_, asio::buffer(encoded_message),
                     asio::bind_executor(strand_, [this, self](boost::system::error_code ec, std::size_t /*length*/) {
                         if (!ec) {
-                            std::cout << "Sent periodic message to client: Hello from the server!" << std::endl;
+                            std::cout << "Sent periodic message to client: " << socket_.native_handle() << std::endl;
                             // Continue sending periodic messages
                             do_send_periodic_messages();
                         } else {
+                            std::cout << "Error sending periodic message: " << ec.message() << std::endl;
                             socket_.close();
                         }
                     })
                 );
+            } else {
+                std::cout << "Timer error in do_send_periodic_messages: " << ec.message() << std::endl;
             } }));
     }
 
@@ -614,15 +827,17 @@ private:
     asio::steady_timer timer_;
     std::string buffer_;
     char read_buffer_[BUFFER_SIZE];
-    Board board;
+    // Board board;
+    bool matched_;
+    int opponent_socket_id_; // New member to store opponent's socket ID
 };
 
 class WebSocketServer
 {
 public:
-    WebSocketServer(asio::io_context &context, short port, Board &board)
+    WebSocketServer(asio::io_context &context, short port)
         : acceptor_(context, tcp::endpoint(tcp::v4(), port)),
-          context_(context), board(board)
+          context_(context)
     {
         cout << "Server is started and Listening on port " << port << endl;
         do_accept();
@@ -636,7 +851,7 @@ private:
             {
                 if (!ec)
                 {
-                    std::make_shared<WebSocketSession>(std::move(socket), context_, board)->start();
+                    std::make_shared<WebSocketSession>(std::move(socket), context_)->start();
                 }
                 do_accept(); // Continue accepting new connections
             });
@@ -644,21 +859,21 @@ private:
 
     tcp::acceptor acceptor_;
     asio::io_context &context_;
-    Board board;
+    // Board board;
 };
 
 int main()
 {
     try
     {
-        Board board;
-        string moves;
-        initializeBoard(board);
+        // Board board;
+        // string moves;
+        // initializeBoard(board);
         // printBoard(board);
         asio::io_context context;
-        WebSocketServer server(context, PORT, board);
+        WebSocketServer server(context, PORT);
 
-        asio::thread_pool pool(4); // Thread pool with 4 threads
+        asio::thread_pool pool(16); // Thread pool with 4 threads
         for (int i = 0; i < 4; ++i)
         {
             asio::post(pool, [&context]
