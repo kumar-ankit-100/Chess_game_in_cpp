@@ -873,8 +873,8 @@ int main()
         asio::io_context context;
         WebSocketServer server(context, PORT);
 
-        asio::thread_pool pool(16); // Thread pool with 4 threads
-        for (int i = 0; i < 4; ++i)
+        asio::thread_pool pool(8); // Thread pool with 4 threads
+        for (int i = 0; i < 8; ++i)
         {
             asio::post(pool, [&context]
                        { context.run(); });
