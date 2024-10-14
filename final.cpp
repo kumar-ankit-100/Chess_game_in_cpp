@@ -682,17 +682,39 @@ private:
                            try {
                                 json request = json::parse(message);
                                 string purpose = request["purpose"];
-                          
                     
-                    if(purpose == "givemeopponentupdate"){
                         json temp;
-                        auto it = game_manager.findGameBySocket(socket_.native_handle());
+                       auto it = game_manager.findGameBySocket(socket_.native_handle());
+                      std::shared_ptr<Game> game = it->second;
+                      int opponent_socket_id = game->getOpponentSocket(socket_.native_handle());
+
+                      std::string color = (socket_.native_handle() == game->white_socket) ? "white" : "black";
+                      std::string opponent_color = (color == "white") ? "black" : "white";
+
+                    if(purpose=="messageSent"){
+                          if (it == game_manager.games.end()){
+                              temp["erroringame"]="player not found invalid socket id ";
+                              response = temp.dump();
+                          }
+                          else{
+                                 if(color=="white"){
+
+                                 game->whiteMessage=request["message"];
+                                 }
+                                 else{
+                                 game->blackMessage = request["message"];
+                                 }
+                                 temp["messageSent"]="successfull";
+                                 response=temp.dump();
+                          }
+                    }
+                    else if(purpose == "givemeopponentupdate"){
                           if (it == game_manager.games.end()){
                               temp["erroringame"]="player not found invalid socket id ";
                           }
                           else{
                             std::lock_guard<std::mutex> lock(isCheckmateMutex);
-                                  std::shared_ptr<Game> game = it->second;
+                                  
                             if (is_checkmate(game->nboard, white))
                               {
                                 cout << "Checkmate! " <<  "Black Wins !" << endl;
@@ -705,14 +727,25 @@ private:
                                 temp["winColor"] = "White";
                             }
                             //   else{
-                             int opponent_socket_id = game->getOpponentSocket(socket_.native_handle());
+                             
+                             if(color=="white"){
+                                if(game->whitePlayer==""){
+                                    game->whitePlayer=request["playerName"];
+                                }
+                             }
+                             else{
+                                if(game->blackPlayer==""){
+                                    game->blackPlayer=request["playerName"];
+                                }
 
-                             std::string color = (socket_.native_handle() == game->white_socket) ? "white" : "black";
-                             std::string opponent_color = (color == "white") ? "black" : "white";
+                             }
                             temp["purpose"]="updateBoard";
                             temp["previousMove"]=game->previousMove;
                             temp["colorToUpdate"]=opponent_color;
-
+                            temp["opponentName"]=(color == "white") ? game->blackPlayer : game->whitePlayer;
+                            temp["message"]=(color=="white")?game->blackMessage:game->whiteMessage;
+                            if(color=="white") game->blackMessage="";
+                            else game->whiteMessage="";
                             //   }
                           
 

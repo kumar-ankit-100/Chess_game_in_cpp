@@ -40,7 +40,11 @@ public:
     int white_socket;
     int black_socket;
     int current_turn;
+    string whitePlayer="";
+    string blackPlayer = "";
     string previousMove;
+    string whiteMessage="";
+    string blackMessage="";
 };
 
 class GameManager
