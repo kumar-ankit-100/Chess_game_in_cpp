@@ -65,4 +65,5 @@ string kingPosition(Board &board, int pieceColor);
 string positionToString(char col, int row);
 int is_piece_present_in_square(Board &board, char col, int row);
 
-string handle_request(const string &json_request, Board &board);
+string handle_request(const string &json_request, Board &board,int socketId);
+string getBestMove(Board& board, int color, int depth) ;

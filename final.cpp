@@ -87,7 +87,7 @@ string kingPosition(Board &board, int pieceColor)
     return kingPositionInString;
 }
 
-string handle_request(const string &json_request, Board &board)
+string handle_request(const string &json_request, Board &board,int socketId)
 {
     std::cout << "Raw JSON request: " << json_request << std::endl;
 
@@ -414,6 +414,24 @@ string handle_request(const string &json_request, Board &board)
         cout << endl;
         bool success = moveGeneration(move, board);
         printBoard(board);
+        auto it = game_manager.findGameBySocket(socketId);
+        if (it != game_manager.games.end() && it->second->isAIGame)
+        {
+            string aiMove = getBestMove(board, black, 3); // Depth of 3 for AI
+            moveGeneration( aiMove,board);
+            cout<<"Ai move is : "<<aiMove<<endl;
+            it->second->previousMove=aiMove;
+            it->second->switchTurn();
+            
+            json aiResponse;
+            // aiResponse["status"] = "success";
+            aiResponse["Aiposition"] = aiMove;
+            aiResponse["isAIMove"] = true;
+            // return aiResponse.dump();
+        }
+        else{
+            cout<<"Error ! game not found with ai "<<endl;
+        }
 
         response["status"] = success ? "success" : "error";
         response["position"] = move;
@@ -520,6 +538,8 @@ std::unordered_map<int, std::shared_ptr<tcp::socket>> idToSocket;
 std::mutex idToSocketMutex;
 std::mutex read_mutex;
 std::mutex isCheckmateMutex;
+std::mutex isPlayWithAi;
+int prev_socket_id=-1;
 
 void notify_match_started(tcp::socket &socket)
 {
@@ -619,13 +639,13 @@ private:
                                               {
                 if (!ec) {
                     cout << "handshake completed and socket id:" << socket_.native_handle() << endl;
-                   
-                    if (!matched_) {
-                        check_for_match();
-                    } else {
-                        do_read();
-                        // do_send_periodic_messages();
-                    }
+                    do_read();
+                    // if (!matched_) {
+                    //     check_for_match();
+                    // } else {
+                    //     do_read();
+                    //     // do_send_periodic_messages();
+                    // }
                 } }));
     }
     // void storeSocket(int socket_id, tcp::socket socket)
@@ -684,7 +704,28 @@ private:
                                 string purpose = request["purpose"];
                     
                         json temp;
-                       auto it = game_manager.findGameBySocket(socket_.native_handle());
+                       
+
+                    //    std::lock_guard<std::mutex> lock(isPlayWithAi);
+                    if (!matched_) {
+                        if(purpose=="playWithAI")
+                        {
+                            matched_=true;
+                            cout<<"error is here 2"<<endl;
+                            game_manager.makeGame(socket_.native_handle(),-1);
+                              std::cout << "Match started between Ai and you sockets: " << -1 << " and " << socket_.native_handle() << std::endl;
+                 
+                               notify_match_started(socket_);
+
+                        }
+                        else if(purpose=="givemeopponentupdate"){
+
+                        }
+                        else
+                        check_for_match();
+                    }
+                    else{
+                        auto it = game_manager.findGameBySocket(socket_.native_handle());
                       std::shared_ptr<Game> game = it->second;
                       int opponent_socket_id = game->getOpponentSocket(socket_.native_handle());
 
@@ -763,6 +804,7 @@ private:
                         cout << "Invalid move" << endl;
                         response = "Invalid move!";
                     }
+                    } 
                     }
                               } catch (nlohmann::json::parse_error& e) {
                                   std::cerr << "Error parsing JSON: " << e.what() << std::endl;
@@ -774,8 +816,9 @@ private:
                     
 
                     
-
+                    
                     std::string response_frame = encode_websocket_frame(response);
+                    cout<<"error is here 1"<<endl;
                     do_write(response_frame);
 
                     // Continue reading without checking for match again

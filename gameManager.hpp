@@ -45,6 +45,7 @@ public:
     string previousMove;
     string whiteMessage="";
     string blackMessage="";
+    bool isAIGame = false;
 };
 
 class GameManager
@@ -75,14 +76,14 @@ public:
         string purpose = request["purpose"];
         if (purpose == "generateMove")
         {
-            return make_pair(true, handle_request(move, game.nboard));
+            return make_pair(true, handle_request(move, game.nboard,socket_id));
         }
         else if (purpose == "updateBoard")
         {
             cout<<"switching turn"<<endl;
             game.switchTurn();
             game.updatePreviousMove(request["position"]);
-            return make_pair(true, handle_request(move, game.nboard));
+            return make_pair(true, handle_request(move, game.nboard,socket_id));
         }
 
         // Send updated nboard state to both players
@@ -106,14 +107,27 @@ public:
     {
         int player1 = socket1;
         int player2 = socket2;
+        int white_socket;
+        int black_socket;
+        if(socket2==-1){
+             white_socket=socket1;
+             black_socket=-1;
+
+        }
+        else{
 
         // Randomly assign colors
         std::uniform_int_distribution<> dis(0, 1);
-        int white_socket = dis(random_engine) == 0 ? player1 : player2;
-        int black_socket = white_socket == player1 ? player2 : player1;
+         white_socket = dis(random_engine) == 0 ? player1 : player2;
+         black_socket = white_socket == player1 ? player2 : player1;
         cout << "white socket : " << white_socket << " " << "black socket" << black_socket << endl;
+        }
 
         auto game = std::make_shared<Game>(white_socket, black_socket);
+        if(socket2==-1){
+            game->blackPlayer="Ai Bot";
+            game->isAIGame=true;
+        }
         int game_id = next_game_id++;
         games[game_id] = game;
     }
