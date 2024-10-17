@@ -41,47 +41,7 @@ bool is_path_clear(Board &board, char start_col, int start_row, char end_col, in
 
     return true; // Path is clear
 }
-// bool is_square_under_attack_by_bishop_or_queen(Board &board, char col, int row, int opponentColor)
-// {
-//     Bitboard bit = 1;
-//     Bitboard from_mask = bit << ((row * 8) - (col - 97) - 1);
 
-//     // Define diagonal directions: top-right, top-left, bottom-right, bottom-left
-//     int directions[4][2] = {{1, 1}, {1, -1}, {-1, 1}, {-1, -1}};
-
-//     for (auto dir : directions)
-//     {
-//         char cur_col = col;
-//         int cur_row = row;
-
-//         while (true)
-//         {
-//             cur_col += dir[1]; // Move left or right
-//             cur_row += dir[0]; // Move up or down
-
-//             // Check if the current position is out of bounds
-//             if (cur_col < 'a' || cur_col > 'h' || cur_row < 1 || cur_row > 8)
-//                 break;
-
-//             // Calculate the bitboard mask for the current position
-//             Bitboard to_mask = bit << ((cur_row * 8) - (cur_col - 97) - 1);
-
-//             // Check if there's a piece in the current square
-//             if (board.ouccupancy[both] & to_mask)
-//             {
-//                 // If it's an opponent's bishop or queen, the square is under attack
-//                 if ((board.pices[opponentColor][bishop] & to_mask) || (board.pices[opponentColor][queen] & to_mask))
-//                 {
-//                     return true;
-//                 }
-//                 // Stop moving in this direction after finding any piece
-//                 break;
-//             }
-//         }
-//     }
-
-//     return false; // No attacking bishop or queen found
-// }
 
 std::string positionToString(char col, int row)
 {
@@ -95,6 +55,7 @@ bool is_square_under_attack_by_bishop_or_queen(Board &board, char col, int row, 
 
     // Define diagonal directions: top-right, top-left, bottom-right, bottom-left
     int directions[4][2] = {{1, 1}, {1, -1}, {-1, 1}, {-1, -1}};
+
 
     for (auto dir : directions)
     {
@@ -120,6 +81,8 @@ bool is_square_under_attack_by_bishop_or_queen(Board &board, char col, int row, 
                 // If it's an opponent's bishop or queen, the square is under attack
                 if ((board.pices[opponentColor][bishop] & to_mask) || (board.pices[opponentColor][queen] & to_mask))
                 {
+    cout<<"andar aagya"<<endl;
+                    // cout<<"found queen in attack"<<endl;
                     board.emptySquares.push_back(positionToString(cur_col, cur_row));
                     return true;
                 }
@@ -284,83 +247,17 @@ bool is_square_under_attack(Board &board, char col, int row, int opponentColor)
             }
         }
     }
-    // Check for rook/queen attacks (horizontal or vertical)
-    if (is_square_under_attack_by_rook_or_queen(board, col, row, opponentColor))
-    {
-        return true;
-    }
-
     // Check for bishop/queen attacks (diagonals)
     if (is_square_under_attack_by_bishop_or_queen(board, col, row, opponentColor))
     {
 
         return true;
     }
-
-    // // Get all possible rook or queen moves from the current position
-    // Bitboard bit = 1;
-    // Bitboard from_mask = bit << ((row * 8) - (col - 97) - 1);
-
-    // // Check horizontal and vertical lines for attacks
-    // // Horizontal (left-right)
-    // for (int i = col - 1; i >= 'a'; --i)
-    // { // Move left
-    //     Bitboard to_mask = bit << ((row * 8) - (i - 97) - 1);
-    //     if (board.ouccupancy[both] & to_mask)
-    //     { // If there's a piece
-    //         if ((board.pices[opponentColor][rook] & to_mask) || (board.pices[opponentColor][queen] & to_mask))
-    //         {
-    //             return true; // Opponent's rook or queen is attacking
-    //         }
-    //         break; // Blocked by any piece
-    //     }
-    // }
-
-    // for (int i = col + 1; i <= 'h'; ++i)
-    // { // Move right
-    //     Bitboard to_mask = bit << ((row * 8) - (i - 97) - 1);
-    //     if (board.ouccupancy[both] & to_mask)
-    //     {
-    //         if ((board.pices[opponentColor][rook] & to_mask) || (board.pices[opponentColor][queen] & to_mask))
-    //         {
-    //             return true;
-    //         }
-    //         break;
-    //     }
-    // }
-
-    // // Vertical (up-down)
-    // for (int j = row + 1; j <= 8; ++j)
-    // { // Move upwards
-    //     Bitboard to_mask = bit << ((j * 8) - (col - 97) - 1);
-    //     if (board.ouccupancy[both] & to_mask)
-    //     {
-    //         if ((board.pices[opponentColor][rook] & to_mask) || (board.pices[opponentColor][queen] & to_mask))
-    //         {
-    //             return true;
-    //         }
-    //         break;
-    //     }
-    // }
-
-    // for (int j = row - 1; j >= 1; --j)
-    // { // Move downwards
-    //     Bitboard to_mask = bit << ((j * 8) - (col - 97) - 1);
-    //     if (board.ouccupancy[both] & to_mask)
-    //     {
-    //         if ((board.pices[opponentColor][rook] & to_mask) || (board.pices[opponentColor][queen] & to_mask))
-    //         {
-    //             return true;
-    //         }
-    //         break;
-    //     }
-    // }
-
-    // // Check for bishop/queen attacks (diagonals)
-    // if (is_square_under_attack_by_bishop_or_queen(board, col, row, opponentColor))
-    // {
-    //     return true;
-    // }
+    // Check for rook/queen attacks (horizontal or vertical)
+    if (is_square_under_attack_by_rook_or_queen(board, col, row, opponentColor))
+    {
+        return true;
+    }
 
     // Define all possible king moves (one square in any direction)
     int kingMoves[8][2] = {

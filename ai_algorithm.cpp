@@ -8,7 +8,7 @@
 // Piece values for evaluation
 const int PAWN_VALUE = 1;
 const int KNIGHT_VALUE = 3;
-const int BISHOP_VALUE = 3;
+const int BISHOP_VALUE = 4;
 const int ROOK_VALUE = 5;
 const int QUEEN_VALUE = 9;
 
