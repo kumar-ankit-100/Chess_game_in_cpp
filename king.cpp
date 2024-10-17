@@ -81,7 +81,7 @@ bool is_square_under_attack_by_bishop_or_queen(Board &board, char col, int row, 
                 // If it's an opponent's bishop or queen, the square is under attack
                 if ((board.pices[opponentColor][bishop] & to_mask) || (board.pices[opponentColor][queen] & to_mask))
                 {
-    cout<<"andar aagya"<<endl;
+    // cout<<"andar aagya"<<endl;
                     // cout<<"found queen in attack"<<endl;
                     board.emptySquares.push_back(positionToString(cur_col, cur_row));
                     return true;

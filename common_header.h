@@ -13,6 +13,12 @@ struct Board
   Bitboard ouccupancy[3];
   string name;
   vector<string> emptySquares;
+  bool white_king_moved;
+  bool black_king_moved;
+  bool white_kingside_rook_moved;
+  bool white_queenside_rook_moved;
+  bool black_kingside_rook_moved;
+  bool black_queenside_rook_moved;
 };
 enum
 {
@@ -65,5 +71,5 @@ string kingPosition(Board &board, int pieceColor);
 string positionToString(char col, int row);
 int is_piece_present_in_square(Board &board, char col, int row);
 
-string handle_request(const string &json_request, Board &board,int socketId);
-string getBestMove(Board& board, int color, int depth) ;
+string handle_request(const string &json_request, Board &board, int socketId);
+string getBestMove(Board &board, int color, int depth);

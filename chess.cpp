@@ -26,6 +26,13 @@ void initializeBoard(Board &board)
   board.ouccupancy[white] = 0x000000000000ffff;
   board.ouccupancy[black] = 0xffff000000000000;
   board.ouccupancy[both] = 0xffff00000000ffff;
+
+  board.white_king_moved = false;
+  board.black_king_moved = false;
+  board.white_kingside_rook_moved = false;
+  board.white_queenside_rook_moved = false;
+  board.black_kingside_rook_moved = false;
+  board.black_queenside_rook_moved = false;
 }
 void printBoard(Board &board)
 {
@@ -512,8 +519,9 @@ int moveGeneration(string moves, struct Board &board)
   }
 }
 
-vector<string> tempfun(){
-  vector<string> moves = {"e4","e5"};
+vector<string> tempfun()
+{
+  vector<string> moves = {"e4", "e5"};
   return moves;
 }
 

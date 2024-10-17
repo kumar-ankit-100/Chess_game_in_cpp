@@ -6,11 +6,72 @@
 #include "common_header.h"
 
 // Piece values for evaluation
-const int PAWN_VALUE = 1;
-const int KNIGHT_VALUE = 3;
-const int BISHOP_VALUE = 4;
-const int ROOK_VALUE = 5;
-const int QUEEN_VALUE = 9;
+const int PAWN_VALUE = 100;
+const int KNIGHT_VALUE = 320;
+const int BISHOP_VALUE = 330;
+const int ROOK_VALUE = 500;
+const int QUEEN_VALUE = 900;
+const int KING_VALUE = 20000;
+
+const int PAWN_PST[64] = {
+    0, 0, 0, 0, 0, 0, 0, 0,
+    50, 50, 50, 50, 50, 50, 50, 50,
+    10, 10, 20, 30, 30, 20, 10, 10,
+    5, 5, 10, 25, 25, 10, 5, 5,
+    0, 0, 0, 20, 20, 0, 0, 0,
+    5, -5, -10, 0, 0, -10, -5, 5,
+    5, 10, 10, -20, -20, 10, 10, 5,
+    0, 0, 0, 0, 0, 0, 0, 0};
+
+const int KNIGHT_PST[64] = {
+    -50, -40, -30, -30, -30, -30, -40, -50,
+    -40, -20, 0, 0, 0, 0, -20, -40,
+    -30, 0, 10, 15, 15, 10, 0, -30,
+    -30, 5, 15, 20, 20, 15, 5, -30,
+    -30, 0, 15, 20, 20, 15, 0, -30,
+    -30, 5, 10, 15, 15, 10, 5, -30,
+    -40, -20, 0, 5, 5, 0, -20, -40,
+    -50, -40, -30, -30, -30, -30, -40, -50};
+
+const int BISHOP_PST[64] = {
+    -20, -10, -10, -10, -10, -10, -10, -20,
+    -10, 0, 0, 0, 0, 0, 0, -10,
+    -10, 0, 5, 10, 10, 5, 0, -10,
+    -10, 5, 5, 10, 10, 5, 5, -10,
+    -10, 0, 10, 10, 10, 10, 0, -10,
+    -10, 10, 10, 10, 10, 10, 10, -10,
+    -10, 5, 0, 0, 0, 0, 5, -10,
+    -20, -10, -10, -10, -10, -10, -10, -20};
+
+const int ROOK_PST[64] = {
+    0, 0, 0, 0, 0, 0, 0, 0,
+    5, 10, 10, 10, 10, 10, 10, 5,
+    -5, 0, 0, 0, 0, 0, 0, -5,
+    -5, 0, 0, 0, 0, 0, 0, -5,
+    -5, 0, 0, 0, 0, 0, 0, -5,
+    -5, 0, 0, 0, 0, 0, 0, -5,
+    -5, 0, 0, 0, 0, 0, 0, -5,
+    0, 0, 0, 5, 5, 0, 0, 0};
+
+const int QUEEN_PST[64] = {
+    -20, -10, -10, -5, -5, -10, -10, -20,
+    -10, 0, 0, 0, 0, 0, 0, -10,
+    -10, 0, 5, 5, 5, 5, 0, -10,
+    -5, 0, 5, 5, 5, 5, 0, -5,
+    0, 0, 5, 5, 5, 5, 0, -5,
+    -10, 5, 5, 5, 5, 5, 0, -10,
+    -10, 0, 5, 0, 0, 0, 0, -10,
+    -20, -10, -10, -5, -5, -10, -10, -20};
+
+const int KING_PST[64] = {
+    -30, -40, -40, -50, -50, -40, -40, -30,
+    -30, -40, -40, -50, -50, -40, -40, -30,
+    -30, -40, -40, -50, -50, -40, -40, -30,
+    -30, -40, -40, -50, -50, -40, -40, -30,
+    -20, -30, -30, -40, -40, -30, -30, -20,
+    -10, -20, -20, -20, -20, -20, -20, -10,
+    20, 20, 0, 0, 0, 0, 20, 20,
+    20, 30, 10, 0, 0, 10, 30, 20};
 
 // Function to evaluate the board position
 int evaluateBoard(const Board &board)
@@ -18,40 +79,56 @@ int evaluateBoard(const Board &board)
     int whiteScore = 0;
     int blackScore = 0;
 
-    // Count material
+    // Count material and apply piece-square tables
     for (int i = 0; i < 64; i++)
     {
         Bitboard mask = 1ULL << i;
         if (board.pices[white][pawn] & mask)
-            whiteScore += PAWN_VALUE;
+            whiteScore += PAWN_VALUE + PAWN_PST[i];
         if (board.pices[white][knight] & mask)
-            whiteScore += KNIGHT_VALUE;
+            whiteScore += KNIGHT_VALUE + KNIGHT_PST[i];
         if (board.pices[white][bishop] & mask)
-            whiteScore += BISHOP_VALUE;
+            whiteScore += BISHOP_VALUE + BISHOP_PST[i];
         if (board.pices[white][rook] & mask)
-            whiteScore += ROOK_VALUE;
+            whiteScore += ROOK_VALUE + ROOK_PST[i];
         if (board.pices[white][queen] & mask)
-            whiteScore += QUEEN_VALUE;
+            whiteScore += QUEEN_VALUE + QUEEN_PST[i];
+        if (board.pices[white][king] & mask)
+            whiteScore += KING_VALUE + KING_PST[i];
 
         if (board.pices[black][pawn] & mask)
-            blackScore += PAWN_VALUE;
+            blackScore += PAWN_VALUE + PAWN_PST[63 - i];
         if (board.pices[black][knight] & mask)
-            blackScore += KNIGHT_VALUE;
+            blackScore += KNIGHT_VALUE + KNIGHT_PST[63 - i];
         if (board.pices[black][bishop] & mask)
-            blackScore += BISHOP_VALUE;
+            blackScore += BISHOP_VALUE + BISHOP_PST[63 - i];
         if (board.pices[black][rook] & mask)
-            blackScore += ROOK_VALUE;
+            blackScore += ROOK_VALUE + ROOK_PST[63 - i];
         if (board.pices[black][queen] & mask)
-            blackScore += QUEEN_VALUE;
+            blackScore += QUEEN_VALUE + QUEEN_PST[63 - i];
+        if (board.pices[black][king] & mask)
+            blackScore += KING_VALUE + KING_PST[63 - i];
     }
 
-    // You can add more sophisticated evaluation here (e.g., piece positioning, pawn structure)
+    // Evaluate pawn structure, mobility, king safety, etc.
+    // ... (implement these evaluations)
 
     return whiteScore - blackScore;
 }
 
 // Function to generate all legal moves
-std::vector<std::string> generateAllLegalMoves(const Board &board, int color)
+bool isLegalMove( Board &board, const string &move, int color)
+{
+    // Implement move legality check, including:
+    // 1. Basic move rules for each piece
+    // 2. Check if the move leaves the king in check
+    // 3. Special rules (castling, en passant, etc.)
+    if (moveGeneration(move, board))
+        return true; // Placeholder
+    else
+        return false;
+}
+vector<std::string> generateAllLegalMoves( Board &board, int color)
 {
     std::vector<std::string> allMoves;
 
@@ -79,7 +156,11 @@ std::vector<std::string> generateAllLegalMoves(const Board &board, int color)
             {
                 for (const auto &move : moveList)
                 {
-                    allMoves.push_back(std::string(1, col) + std::to_string(row) + move);
+                    std::string fullMove = std::string(1, col) + std::to_string(row) + move;
+                    // if (isLegalMove(board, fullMove, color))
+                    // {
+                        allMoves.push_back(fullMove);
+                    // }
                 }
             }
         }
